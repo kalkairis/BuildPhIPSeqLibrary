@@ -1,19 +1,20 @@
+import glob
 import hashlib
 import logging
-
-import pandas as pd
-import glob
 import os.path
 
-from BuildPhIPSeqLibrary.config import INPUT_DIR, OUTPUT_DIR, seq_ID_col, seq_AA_col
+import pandas as pd
+
+from BuildPhIPSeqLibrary.config import INPUT_DIR, seq_ID_col, seq_AA_col, FILES_INPUT_HASH_FILE
 
 
-def get_input_files(**kwargs):
+def get_input_files(files_hash_path=FILES_INPUT_HASH_FILE, **kwargs):
     """
     Lists files to process for library construction.
     Asserts no file has been changed.
     Will warn if file has been removed from INPUT_DIR.
     Saves MD5 hash of all files in OUTPUT_DIR/files_hash.csv
+    :param files_hash_path:
     :param kwargs: unused
     :return: List of new files to process
     """
@@ -26,7 +27,7 @@ def get_input_files(**kwargs):
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
         input_hashes[filename] = hash_md5.hexdigest()
-    files_hash_path = os.path.join(OUTPUT_DIR, 'files_hash.csv')
+
     if os.path.exists(files_hash_path):
         files_hash = pd.read_csv(files_hash_path, index_col=0)['0'].to_dict()
         for filename, file_hash in files_hash.items():

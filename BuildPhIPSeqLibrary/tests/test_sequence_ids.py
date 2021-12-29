@@ -1,4 +1,5 @@
 import os
+import shutil
 from unittest import TestCase, mock
 
 import pandas

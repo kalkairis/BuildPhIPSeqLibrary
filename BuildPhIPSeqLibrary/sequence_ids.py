@@ -1,7 +1,8 @@
 import pandas as pd
 import os
 
-from BuildPhIPSeqLibrary.config import OUTPUT_DIR, seq_AA_col, seq_ID_col, AMINO_INFO
+from BuildPhIPSeqLibrary.config import OUTPUT_DIR, seq_AA_col, seq_ID_col, AMINO_INFO, SEQUENCES_IDS_FILE
+from BuildPhIPSeqLibrary.read_pipeline_files import read_sequence_ids_file
 
 
 def is_amino_acid_sequence(sequence):
@@ -10,22 +11,21 @@ def is_amino_acid_sequence(sequence):
     return all(list(map(lambda letter: letter in amino_acid_letters, list(sequence))))
 
 
-def add_sequences_to_files_list(sequences, filename):
+def add_sequences_to_files_list(sequences, filename, output_path=SEQUENCES_IDS_FILE):
     """
     This file adds a list of sequences from a newly read file to the sequences table.
     It will return only newly-added sequences.
+    :param output_path:
     :param sequences: dictionary with sequence_ID -> AA_sequence
     :param filename: Name of file where sequences originated from.
         This allows us to make sequence IDs non-unique between files.
     :return: Newly added sequences with their seq_ID (running identifier, not identical to sequence_ID).
     """
-    output_path = os.path.join(OUTPUT_DIR, 'sequences_ids.csv')
     # Read existing table of sequences
-    if os.path.exists(output_path):
-        sequences_df = pd.read_csv(output_path, index_col=0)
+    sequences_df = read_sequence_ids_file(output_path)
+    if len(sequences_df)>0:
         running_index_ID = sequences_df.index.str.split('_').str[1].astype(int).max() + 1
     else:
-        sequences_df = pd.DataFrame(columns=['seq_ID', seq_AA_col, seq_ID_col, 'input_file']).set_index('seq_ID')
         running_index_ID = 0
     sequences_dict = sequences_df.reset_index()[['seq_ID', seq_AA_col]].drop_duplicates().set_index(seq_AA_col)[
         'seq_ID'].to_dict()
