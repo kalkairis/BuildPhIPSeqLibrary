@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-from BuildPhIPSeqLibrary.config import OUTPUT_DIR, seq_AA_col, seq_ID_col, AMINO_INFO, SEQUENCES_IDS_FILE
+from BuildPhIPSeqLibrary.config import seq_AA_col, seq_ID_col, AMINO_INFO, SEQUENCES_IDS_FILE
 from BuildPhIPSeqLibrary.read_pipeline_files import read_sequence_ids_file
 
 
@@ -11,7 +11,7 @@ def is_amino_acid_sequence(sequence):
     return all(list(map(lambda letter: letter in amino_acid_letters, list(sequence))))
 
 
-def add_sequences_to_files_list(sequences, filename, output_path=SEQUENCES_IDS_FILE):
+def add_sequences_to_files_list(sequences, filename, output_path=None):
     """
     This file adds a list of sequences from a newly read file to the sequences table.
     It will return only newly-added sequences.
@@ -21,6 +21,8 @@ def add_sequences_to_files_list(sequences, filename, output_path=SEQUENCES_IDS_F
         This allows us to make sequence IDs non-unique between files.
     :return: Newly added sequences with their seq_ID (running identifier, not identical to sequence_ID).
     """
+    if output_path is None:
+        output_path = SEQUENCES_IDS_FILE
     # Read existing table of sequences
     sequences_df = read_sequence_ids_file(output_path)
     if len(sequences_df)>0:

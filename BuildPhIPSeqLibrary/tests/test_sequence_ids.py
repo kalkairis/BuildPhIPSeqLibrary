@@ -20,7 +20,8 @@ class Test(TestCase):
         if os.path.exists(self.seqs_table):
             os.remove(self.seqs_table)
 
-    @mock.patch('BuildPhIPSeqLibrary.sequence_ids.OUTPUT_DIR', os.path.join(MOCK_DATA_DIR, 'Output'))
+    @mock.patch('BuildPhIPSeqLibrary.sequence_ids.SEQUENCES_IDS_FILE', os.path.join(MOCK_DATA_DIR, 'Output',
+                                                                                    'sequences_ids.csv'))
     def test_add_sequences_to_files_list(self):
         filename = os.path.join(MOCK_DATA_DIR, 'Input', 'sample_input.csv')
         ret = add_sequences_to_files_list(read_file(filename), filename)
@@ -35,7 +36,8 @@ class Test(TestCase):
         self.assertEqual(len(seqs_table), 42)
         self.assertEqual(seqs_table.seq_ID.nunique(), 21)
 
-    @mock.patch('BuildPhIPSeqLibrary.sequence_ids.OUTPUT_DIR', os.path.join(MOCK_DATA_DIR, 'Output'))
+    @mock.patch('BuildPhIPSeqLibrary.sequence_ids.SEQUENCES_IDS_FILE', os.path.join(MOCK_DATA_DIR, 'Output',
+                                                                                    'sequences_ids.csv'))
     def test_check_is_amino_acid_sequence(self):
         amino_acid = 'FLLMVKN'
         self.assertTrue(is_amino_acid_sequence(amino_acid))

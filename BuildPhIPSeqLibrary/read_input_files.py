@@ -8,7 +8,7 @@ import pandas as pd
 from BuildPhIPSeqLibrary.config import INPUT_DIR, seq_ID_col, seq_AA_col, FILES_INPUT_HASH_FILE
 
 
-def get_input_files(files_hash_path=FILES_INPUT_HASH_FILE, **kwargs):
+def get_input_files(files_hash_path=None, **kwargs):
     """
     Lists files to process for library construction.
     Asserts no file has been changed.
@@ -18,6 +18,8 @@ def get_input_files(files_hash_path=FILES_INPUT_HASH_FILE, **kwargs):
     :param kwargs: unused
     :return: List of new files to process
     """
+    if files_hash_path is None:
+        files_hash_path = FILES_INPUT_HASH_FILE
     input_files = glob.glob(os.path.join(INPUT_DIR, "*.csv"))
     new_added_files = set(input_files)
     input_hashes = {}

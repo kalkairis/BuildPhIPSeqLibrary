@@ -105,7 +105,7 @@ class Test(TestCase):
         self.assertEqual(len(ret), 4)
         self.assertEqual(ret['origins'].apply(len).max(), 2)
         self.assertEqual(ret['mapped'].apply(len).max(), 2)
-        self.assertEqual(ret['mapped'].apply(lambda mapped: ['seq_3', 2] in mapped).sum(), 1)
+        self.assertEqual(ret['mapped'].apply(lambda mapped: ('seq_3', 2) in mapped).sum(), 1)
 
     @mock.patch('BuildPhIPSeqLibrary.split_sequences_to_oligos.OLIGO_SEQUENCES_FILE',
                 os.path.join(MOCK_DATA_DIR, 'Output', 'oligos_sequence.csv'))

@@ -20,7 +20,8 @@ class Test(TestCase):
         shutil.rmtree(self.mock_output, ignore_errors=True)
 
     @mock.patch('BuildPhIPSeqLibrary.read_input_files.INPUT_DIR', os.path.join(MOCK_DATA_DIR, 'Input'))
-    @mock.patch('BuildPhIPSeqLibrary.read_input_files.OUTPUT_DIR', os.path.join(MOCK_DATA_DIR, 'Output'))
+    @mock.patch('BuildPhIPSeqLibrary.read_input_files.FILES_INPUT_HASH_FILE', os.path.join(MOCK_DATA_DIR, 'Output',
+                                                                                           'files_hash.csv'))
     def test_get_input_files(self):
         ret = get_input_files()
         self.assertEqual(len(ret), 2)
