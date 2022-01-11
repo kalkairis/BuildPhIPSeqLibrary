@@ -85,10 +85,10 @@ def merge_and_map_sequences(oligos_aa_sequences, id_to_sequences):
     # Stage 4: concatenate dfs
     ret = pd.concat([base_df, oligos_aa_sequences], axis=0, ignore_index=False)
     ret.to_csv(OLIGO_SEQUENCES_FILE)
-    return ret
+    return ret, oligos_aa_sequences
 
 
 def split_and_map_new_sequences(id_to_sequences):
     oligo_aa_sequences = split_sequences_to_oligos(id_to_sequences)
-    ret = merge_and_map_sequences(oligo_aa_sequences, id_to_sequences)
-    return ret
+    all_sequences, new_sequences = merge_and_map_sequences(oligo_aa_sequences, id_to_sequences)
+    return all_sequences, new_sequences

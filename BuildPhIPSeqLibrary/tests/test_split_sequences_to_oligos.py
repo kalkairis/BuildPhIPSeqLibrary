@@ -84,7 +84,7 @@ class Test(TestCase):
         sequence_1 = create_random_aa(OLIGO_AA_LENGTH + OLIGO_AA_OVERLAP)
         sequence_dict = {'seq_1': sequence_1}
         oligos_df = split_sequences_to_oligos(sequence_dict)
-        ret = merge_and_map_sequences(oligos_df, sequence_dict)
+        ret, _ = merge_and_map_sequences(oligos_df, sequence_dict)
         self.assertEqual(len(ret), 2)
         self.assertTrue(ret['mapped'].apply(len).eq(0).all())
         self.assertTrue(ret['origins'].apply(len).eq(1).all())
@@ -92,7 +92,7 @@ class Test(TestCase):
         # Add the existing sequence
         sequence_dict = {'seq_2': sequence_1}
         oligos_df = split_sequences_to_oligos(sequence_dict)
-        ret = merge_and_map_sequences(oligos_df, sequence_dict)
+        ret, _ = merge_and_map_sequences(oligos_df, sequence_dict)
         self.assertEqual(len(ret), 2)
         self.assertTrue(ret['mapped'].apply(len).eq(1).all())
         self.assertTrue(ret['origins'].apply(len).eq(2).all())
@@ -101,7 +101,7 @@ class Test(TestCase):
         sequence_3 = create_random_aa(2) + sequence_1[:OLIGO_AA_LENGTH + 2]
         sequence_dict = {'seq_3': sequence_3}
         oligos_df = split_sequences_to_oligos(sequence_dict)
-        ret = merge_and_map_sequences(oligos_df, sequence_dict)
+        ret, _ = merge_and_map_sequences(oligos_df, sequence_dict)
         self.assertEqual(len(ret), 4)
         self.assertEqual(ret['origins'].apply(len).max(), 2)
         self.assertEqual(ret['mapped'].apply(len).max(), 2)
@@ -116,7 +116,7 @@ class Test(TestCase):
     def test_merge_and_map_sequences_with_existing_files(self):
         sequence_dict = read_sequence_ids_file()['AA_sequence'].to_dict()
         oligos_df = split_sequences_to_oligos(sequence_dict)
-        ret = merge_and_map_sequences(oligos_df, sequence_dict)
+        ret, _ = merge_and_map_sequences(oligos_df, sequence_dict)
         self.assertTrue(ret['origins'].eq(ret['mapped']).all())
         self.assertTrue(ret['origins'].apply(len).eq(1).all())
 
@@ -126,6 +126,6 @@ class Test(TestCase):
         oligos_df = split_sequences_to_oligos(sequence_dict)
         with mock.patch('BuildPhIPSeqLibrary.split_sequences_to_oligos.OLIGO_SEQUENCES_FILE',
                         os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'oligos_sequence.csv')):
-            ret = merge_and_map_sequences(oligos_df, sequence_dict)
+            ret, _ = merge_and_map_sequences(oligos_df, sequence_dict)
         self.assertTrue(ret['origins'].apply(len).eq(1).all())
         self.assertEqual(ret['mapped'].apply(len).eq(2).sum(), 1)
