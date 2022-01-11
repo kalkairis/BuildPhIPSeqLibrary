@@ -32,19 +32,52 @@ def code_one_aa_sequence_to_nuc(aa_seq, num_tries=10):
     return None
 
 
+def iterative_barcode_construction(aa_to_recode, nuc_prefix, nuc_suffix, existing_barcodes):
+    if len(aa_to_recode) == 0:
+        ret = nuc_prefix + nuc_suffix
+        if has_no_restricted_sequences(ret):
+            return ret
+        return None
+    for codon in AMINO_INFO.set_index('amino_acid').loc[aa_to_recode[0]]['codon'].values:
+        if BARCODE_IN_5_PRIME_END:
+            new_nuc_prefix = nuc_prefix + codon
+            for i in range(len(BARCODE_NUC_LENGTHS)):
+                if len(nuc_prefix) < sum(BARCODE_NUC_LENGTHS[:i]) and len(new_nuc_prefix) >= sum(
+                        BARCODE_NUC_LENGTHS[:i]):
+                    barcode_i = new_nuc_prefix[:sum(BARCODE_NUC_LENGTHS[:i])][-BARCODE_NUC_LENGTHS[i]]
+                    if barcode_i not in existing_barcodes[f"barcode_{i}"]:
+                        ret = iterative_barcode_construction(aa_to_recode[1:], new_nuc_prefix, nuc_suffix,
+                                                             existing_barcodes)
+                        if ret is not None:
+                            return ret
+        else:
+            new_nuc_suffix = codon + nuc_suffix
+            for i in range(len(BARCODE_NUC_LENGTHS)):
+                if len(nuc_suffix) < sum(BARCODE_NUC_LENGTHS[-i - 1:]) and len(new_nuc_suffix) >= sum(
+                        BARCODE_NUC_LENGTHS[-i - 1:]):
+                    barcode_i = new_nuc_suffix[-sum(BARCODE_NUC_LENGTHS[-i - 1:])][:BARCODE_NUC_LENGTHS[-i - 1]]
+                    if barcode_i not in existing_barcodes[f"barcode_{len(BARCODE_NUC_LENGTHS) - i - 1}"]:
+                        ret = iterative_barcode_construction(aa_to_recode[1:], nuc_prefix, new_nuc_suffix,
+                                                             existing_barcodes)
+                        if ret is not None:
+                            return ret
+    return None
+
+
 def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=20):
     aa_range_to_recode = math.ceil(sum(BARCODE_NUC_LENGTHS) / 3)
-    succeeded_recoding = False
+    if BARCODE_IN_5_PRIME_END:
+        aa_to_recode = oligo_row['oligo_aa_sequence'][:aa_range_to_recode]
+        nuc_seq_to_maintain = oligo_row['nuc_sequence'][3 * aa_range_to_recode:]
+    else:
+        aa_to_recode = oligo_row['oligo_aa_sequence'][-aa_range_to_recode:]
+        nuc_seq_to_maintain = oligo_row['nuc_sequence'][:-3 * aa_range_to_recode]
     for _ in range(num_tries):
+        new_nuc_barcode_area = code_one_aa_sequence_to_nuc(aa_to_recode)
         if BARCODE_IN_5_PRIME_END:
-            aa_to_recode = oligo_row['oligo_aa_sequence'][:aa_range_to_recode]
-            new_nuc_barcode_area = code_one_aa_sequence_to_nuc(aa_to_recode)
-            oligo_row['nuc_sequence'] = new_nuc_barcode_area + oligo_row['nuc_sequence'][len(new_nuc_barcode_area):]
-
+            oligo_row['nuc_sequence'] = new_nuc_barcode_area + nuc_seq_to_maintain
         else:
-            aa_to_recode = oligo_row['oligo_aa_sequence'][-aa_range_to_recode:]
-            new_nuc_barcode_area = code_one_aa_sequence_to_nuc(aa_to_recode)
-            oligo_row['nuc_sequence'] = oligo_row['nuc_sequence'][:-len(new_nuc_barcode_area)] + new_nuc_barcode_area
+            oligo_row['nuc_sequence'] = nuc_seq_to_maintain + new_nuc_barcode_area
         if has_no_restricted_sequences(oligo_row['nuc_sequence']):
             start_location = 0
             for i, barcode_length in enumerate(BARCODE_NUC_LENGTHS):
@@ -54,7 +87,15 @@ def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=20):
             if all([oligo_row[f'barcode_{i}'] not in existing_barcodes[f'barcode_{i}'] for i in
                     range(len(BARCODE_NUC_LENGTHS))]):
                 return oligo_row
-    # TODO: run the full option case
+
+    # Try writing the oligo barcode iteratively
+    if BARCODE_IN_5_PRIME_END:
+        new_nuc_sequence = iterative_barcode_construction(aa_to_recode, nuc_prefix='', nuc_suffix=nuc_seq_to_maintain,
+                                                          existing_barcodes=existing_barcodes)
+    else:
+        new_nuc_sequence = iterative_barcode_construction(aa_to_recode, nuc_prefix=nuc_seq_to_maintain, nuc_suffix='',
+                                                          existing_barcodes=existing_barcodes)
+
     oligo_row['nuc_sequence'] = None
     return oligo_row
 
@@ -77,8 +118,8 @@ def barcode_sequences(oligo_sequences):
     uncoded_oligos = []
     # Add barcoded oligos one at a time
     for oligo_id, oligo_row in oligo_sequences.iterrows():
-        if False: #all([oligo_row[f'barcode_{i}'] not in existing_barcodes[f'barcode_{i}'] for i in
-                #range(len(BARCODE_NUC_LENGTHS))]):
+        if all([oligo_row[f'barcode_{i}'] not in existing_barcodes[f'barcode_{i}'] for i in
+                range(len(BARCODE_NUC_LENGTHS))]):
             existing_barcodes = existing_barcodes.append(oligo_row[cols])
         else:
             # Try to create a new barcode section
