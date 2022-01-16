@@ -24,8 +24,21 @@ for filename in os.listdir('{OUTPUT_DIR}'):
 
     files = get_input_files()
     for filename in files:
+        print(f"Working on file {filename}")
+        print(f"{filename}: reading file")
         seq_id_to_sequences = read_file(filename)
+        print(f"{filename}: Got {len(seq_id_to_sequences)} sequences")
+        print(f"{filename}: Identifying new sequences")
         seq_id_to_sequences = add_sequences_to_files_list(seq_id_to_sequences, filename)
+        print(f"{filename}: Got {len(seq_id_to_sequences)} new sequences")
+        print(f"{filename}: Converting sequences to oligos")
         all_oligos_aa_sequences, new_oligos_aa_sequences = split_and_map_new_sequences(seq_id_to_sequences)
+        print(f"{filename}: "
+              f"Converted {len(new_oligos_aa_sequences)} new oligos "
+              f"overall {len(all_oligos_aa_sequences)} oligos")
+        print(f"{filename}: Barcoding oligos")
         oligo_non_barcoded_nuc_sequences = aa_to_nuc(new_oligos_aa_sequences)
+        print(
+            f"{filename}: Finished barcoding oligos. "
+            f"Current number of oligos is {len(oligo_non_barcoded_nuc_sequences)}")
     print(f"Finished creating sequences. Find them in {BARCODED_NUC_FILE}")
