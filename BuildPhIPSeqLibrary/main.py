@@ -1,8 +1,9 @@
 import argparse
 import os.path
 
-from BuildPhIPSeqLibrary.config import OUTPUT_DIR, BARCODED_NUC_FILE
+from BuildPhIPSeqLibrary.config import OUTPUT_DIR, BARCODED_NUC_FILE, ORDER_FILE
 from BuildPhIPSeqLibrary.construct_nucleotide_sequences import aa_to_nuc
+from BuildPhIPSeqLibrary.output_to_order import transfer_to_order
 from BuildPhIPSeqLibrary.read_input_files import get_input_files, read_file
 from BuildPhIPSeqLibrary.sequence_ids import add_sequences_to_files_list
 from BuildPhIPSeqLibrary.split_sequences_to_oligos import split_and_map_new_sequences
@@ -37,8 +38,11 @@ for filename in os.listdir('{OUTPUT_DIR}'):
               f"Converted {len(new_oligos_aa_sequences)} new oligos "
               f"overall {len(all_oligos_aa_sequences)} oligos")
         print(f"{filename}: Barcoding oligos")
-        oligo_non_barcoded_nuc_sequences = aa_to_nuc(new_oligos_aa_sequences)
+        oligo_barcoded_sequences = aa_to_nuc(new_oligos_aa_sequences)
         print(
             f"{filename}: Finished barcoding oligos. "
-            f"Current number of oligos is {len(oligo_non_barcoded_nuc_sequences)}")
+            f"Current number of oligos is {len(oligo_barcoded_sequences)}")
     print(f"Finished creating sequences. Find them in {BARCODED_NUC_FILE}")
+    print(f"Converting all sequences to order")
+    transfer_to_order(oligo_barcoded_sequences)
+    print(f"Find file of order in {ORDER_FILE}")

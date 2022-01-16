@@ -13,4 +13,6 @@ In this directory all output files will be added during the run. This include:
   to create the sequence without restriction sites, to having no viable unique barcode for the specific oligo.
 
   __Note__: if this file does not exist, it means that all oligos have successfully been added to the barcodes file.
-  This is not likely in a large library but in smaller ones is a possibility. 
+  This is not likely in a large library but in smaller ones is a possibility.
+- `order_file.txt`: This is a simple text file of all nucleotide sequences to order including the promoters (on both
+  ends of each oligo) as are defined in the config file. 

@@ -18,6 +18,7 @@ OLIGO_SEQUENCES_FILE = globals().get('OLIGO_SEQUENCES_FILE', os.path.join(OUTPUT
 BARCODED_NUC_FILE = globals().get('BARCODED_NUC_FILE', os.path.join(OUTPUT_DIR, 'barcoded_nuc_file.csv'))
 UNCONVERTED_SEQUENCES_FILE = globals().get('UNCONVERTED_SEQUENCES_FILE',
                                            os.path.join(OUTPUT_DIR, 'unconverted_sequences.csv'))
+ORDER_FILE = globals().get('ORDER_FILE', os.path.join(OUTPUT_DIR, 'order_file.txt'))
 
 # Column names
 seq_ID_col = 'sequence_ID'
@@ -40,3 +41,7 @@ RESTRICTED_SEQUENCES = globals().get('RESTRICTED_SEQUENCES',
                                       'AACCCCTTGGGGCCTCTAAACGGGTCTTGAGGGGTTTTTTG', 'A' * 8, 'T' * 8, 'C' * 8, 'G' * 8,
                                       'AC' * 8, 'AG' * 8, 'AT' * 8, 'CA' * 8, 'CG' * 8, 'CT' * 8, 'GC' * 8, 'GA' * 8,
                                       'GT' * 8, 'TC' * 8, 'TG' * 8, 'TA' * 8])
+
+# Promoters
+PREFIX_PROMOTER = globals().get('PREFIX_PROMOTER', "GATGCGCCGTGGGAATTCT")
+SUFFIX_PROMOTER = globals().get('SUFFIX_PROMOTER', "TGAAAGCTTGCCACCCGAC")
