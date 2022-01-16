@@ -1,5 +1,6 @@
+import logging
+
 import pandas as pd
-import os
 
 from BuildPhIPSeqLibrary.config import seq_AA_col, seq_ID_col, AMINO_INFO, SEQUENCES_IDS_FILE
 from BuildPhIPSeqLibrary.read_pipeline_files import read_sequence_ids_file
@@ -25,7 +26,7 @@ def add_sequences_to_files_list(sequences, filename, output_path=None):
         output_path = SEQUENCES_IDS_FILE
     # Read existing table of sequences
     sequences_df = read_sequence_ids_file(output_path)
-    if len(sequences_df)>0:
+    if len(sequences_df) > 0:
         running_index_ID = sequences_df.index.str.split('_').str[1].astype(int).max() + 1
     else:
         running_index_ID = 0
@@ -39,8 +40,9 @@ def add_sequences_to_files_list(sequences, filename, output_path=None):
         if sequence_AA in sequences_dict.keys():
             sequence_ID = sequences_dict[sequence_AA]
         else:
-            assert is_amino_acid_sequence(
-                sequence_AA), f"Sequence {sequence}, in {filename} is not an amino acid sequence"
+            if not is_amino_acid_sequence(sequence_AA):
+                logging.warning(f"Sequence {sequence}, in {filename} is not an amino acid sequence")
+                continue
             sequence_ID = '_'.join(['seq', str(running_index_ID)])
             running_index_ID += 1
             return_sequences[sequence_ID] = sequence_AA
