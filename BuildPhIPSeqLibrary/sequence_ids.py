@@ -47,6 +47,6 @@ def add_sequences_to_files_list(sequences, filename, output_path=None):
         new_sequences.append(
             {'seq_ID': sequence_ID, seq_AA_col: sequence_AA, seq_ID_col: sequence, 'input_file': filename})
     new_sequences = pd.DataFrame(new_sequences).set_index('seq_ID')
-    sequences_df = pd.concat([sequences_df, new_sequences])  # TODO: check axis
+    sequences_df = pd.concat([sequences_df, new_sequences])
     sequences_df.to_csv(output_path)
     return return_sequences
