@@ -1,4 +1,5 @@
 import re
+import time
 
 import pandas as pd
 from numpy.random import choice
@@ -59,6 +60,7 @@ def map_single_oligo_to_sequences_list(oligo, sequences_dict):
 
 
 def merge_and_map_sequences(oligos_aa_sequences, id_to_sequences):
+    print("Merge and map, this takes time", time.ctime())
     base_df = read_oligo_sequences_to_file()
 
     # Stage 1: add oligos already in origins into origins list and remove from new sequences
