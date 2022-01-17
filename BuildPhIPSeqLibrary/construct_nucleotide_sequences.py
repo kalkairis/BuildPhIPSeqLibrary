@@ -86,6 +86,8 @@ def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=20):
         nuc_seq_to_maintain = oligo_row['nuc_sequence'][:-3 * aa_range_to_recode]
     for _ in range(num_tries):
         new_nuc_barcode_area = code_one_aa_sequence_to_nuc(aa_to_recode)
+        if new_nuc_barcode_area is None:
+            continue
         if BARCODE_IN_5_PRIME_END:
             oligo_row['nuc_sequence'] = new_nuc_barcode_area + nuc_seq_to_maintain
         else:

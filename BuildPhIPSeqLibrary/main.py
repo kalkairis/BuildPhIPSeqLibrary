@@ -15,7 +15,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.overwrite and os.path.exists(OUTPUT_DIR):
         assert len([filename for filename in os.listdir(OUTPUT_DIR) if
-                    filename != 'README.md']) == 0, f"""In order to overwrite you must empty the output dir {OUTPUT_DIR}
+                    filename != 'README.md' and not filename.startswith('.')]) == 0, f"""In order to overwrite you must empty the output dir {OUTPUT_DIR}
 Consider running:
 for filename in os.listdir('{OUTPUT_DIR}'):
     if filename != 'README.md':
