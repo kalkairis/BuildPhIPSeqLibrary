@@ -162,7 +162,7 @@ def barcode_sequences(oligo_sequences):
 
 def update_unconverted_oligos_file(unconverted_oligos):
     current_unconverted = read_unconverted_sequences()
-    pd.concat([current_unconverted, unconverted_oligos['oligo_aa_sequence']]).to_csv(UNCONVERTED_SEQUENCES_FILE)
+    pd.concat([current_unconverted, unconverted_oligos[['oligo_aa_sequence']]]).to_csv(UNCONVERTED_SEQUENCES_FILE)
 
 
 def aa_to_nuc(oligos_aa_sequences):
