@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 
 import pandas as pd
 
-from BuildPhIPSeqLibrary.config import MOCK_DATA_DIR, PREFIX_PROMOTER, SUFFIX_PROMOTER
+from BuildPhIPSeqLibrary.config import MOCK_DATA_DIR, PREFIX, SUFFIX
 from BuildPhIPSeqLibrary.output_to_order import transfer_to_order
 
 
@@ -22,13 +22,13 @@ class Test(TestCase):
         num_lines = 0
         with open(os.path.join(MOCK_DATA_DIR, 'Output', 'order_file.txt'), 'r') as file:
             for line in file:
-                self.assertIn(line.strip()[len(PREFIX_PROMOTER):-len(SUFFIX_PROMOTER)], output_oligos['nuc_sequence'].values)
+                self.assertIn(line.strip()[len(PREFIX):-len(SUFFIX)], output_oligos['nuc_sequence'].values)
                 num_lines += 1
         self.assertEqual(num_lines, len(output_oligos))
         transfer_to_order(output_oligos.iloc[:1])
         num_lines = 0
         with open(os.path.join(MOCK_DATA_DIR, 'Output', 'order_file.txt'), 'r') as file:
             for line in file:
-                self.assertIn(line.strip()[len(PREFIX_PROMOTER):-len(SUFFIX_PROMOTER)], output_oligos['nuc_sequence'].values)
+                self.assertIn(line.strip()[len(PREFIX):-len(SUFFIX)], output_oligos['nuc_sequence'].values)
                 num_lines += 1
         self.assertEqual(num_lines, 1)

@@ -27,9 +27,8 @@ seq_AA_col = 'AA_sequence'
 # Oligo lengths
 OLIGO_AA_LENGTH = globals().get('OLIGO_AA_LENGTH', 64)
 OLIGO_AA_OVERLAP = globals().get('OLIGO_AA_OVERLAP', 20)
-BARCODE_IN_5_PRIME_END = globals().get('BARCODE_IN_5_PRIME_END', True)  # TODO: check this with Thomas
+BARCODE_IN_5_PRIME_END = globals().get('BARCODE_IN_5_PRIME_END', True)
 BARCODE_NUC_LENGTHS = globals().get('BARCODE_NUC_LENGTHS', [15, 15, 15, 15, 15])
-# TODO: check with Thomas this does not change if we choose to change the barcodes to the beginning of the oligo
 
 # Amino acid coding and frequencies
 AMINO_ACID_PATH = globals().get('AMINO_ACID_PATH', os.path.join(os.path.dirname(__file__), 'amino_acids_config.csv'))
@@ -42,6 +41,7 @@ RESTRICTED_SEQUENCES = globals().get('RESTRICTED_SEQUENCES',
                                       'AC' * 8, 'AG' * 8, 'AT' * 8, 'CA' * 8, 'CG' * 8, 'CT' * 8, 'GC' * 8, 'GA' * 8,
                                       'GT' * 8, 'TC' * 8, 'TG' * 8, 'TA' * 8])
 
-# Promoters
-PREFIX_PROMOTER = globals().get('PREFIX_PROMOTER', "GATGCGCCGTGGGAATTCT")
-SUFFIX_PROMOTER = globals().get('SUFFIX_PROMOTER', "TGAAAGCTTGCCACCCGAC")
+# Prefix includes - restriction site and primer binding region for library amplification
+PREFIX = globals().get('PREFIX', "GATGCGCCGTGGGAATTCT")
+# Suffix (must start with a stop codon) includes - restriction site and primer binding region for library amplification
+SUFFIX = globals().get('SUFFIX', "TGAAAGCTTGCCACCCGAC")
