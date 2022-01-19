@@ -52,6 +52,7 @@ def read_unconverted_sequences(file_path=None):
         unconverted_sequences_df = pd.DataFrame(columns=['oligo_id', 'oligo_aa_sequence']).set_index('oligo_id')
     return unconverted_sequences_df
 
+
 def read_barcoded_nucleotide_files(file_path=None):
     """
     Reads table of barcoded nucleotides and oligo IDs

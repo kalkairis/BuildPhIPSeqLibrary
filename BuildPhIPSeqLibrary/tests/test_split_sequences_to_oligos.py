@@ -4,8 +4,8 @@ from unittest import TestCase, mock
 
 from numpy.random import choice
 
-from BuildPhIPSeqLibrary.config import AMINO_INFO, OLIGO_AA_LENGTH, AMINO_ACIDS, OLIGO_AA_OVERLAP, MOCK_DATA_DIR
-from BuildPhIPSeqLibrary.read_pipeline_files import read_oligo_sequences_to_file, read_sequence_ids_file
+from BuildPhIPSeqLibrary.config import OLIGO_AA_LENGTH, AMINO_ACIDS, OLIGO_AA_OVERLAP, MOCK_DATA_DIR
+from BuildPhIPSeqLibrary.read_pipeline_files import read_sequence_ids_file
 from BuildPhIPSeqLibrary.split_sequences_to_oligos import split_single_sequence_to_oligos, split_sequences_to_oligos, \
     merge_and_map_sequences
 

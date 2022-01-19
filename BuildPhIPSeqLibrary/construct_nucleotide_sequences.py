@@ -32,8 +32,9 @@ def code_one_aa_sequence_to_nuc(aa_seq, num_tries=100, pr=True):
         if has_no_restricted_sequences(ret):
             return ret
     if pr:
-        logging.warning(f"Failed to convert sequence from amino acids to nucleotides without adding restricted sequences "
-                        f"{aa_seq}")
+        logging.warning(
+            f"Failed to convert sequence from amino acids to nucleotides without adding restricted sequences "
+            f"{aa_seq}")
     return None
 
 
@@ -135,8 +136,9 @@ def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=100):
                                                                  barcode_length)
             start_location += barcode_length
     else:
-        logging.warning(f"Failed to barcode sequence from amino acids to nucleotides without adding restricted sequences "
-                        f"{aa_to_recode}")
+        logging.warning(
+            f"Failed to barcode sequence from amino acids to nucleotides without adding restricted sequences "
+            f"{aa_to_recode}")
     return oligo_row, 1
 
 
