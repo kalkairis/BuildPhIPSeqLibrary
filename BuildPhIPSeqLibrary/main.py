@@ -14,7 +14,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.overwrite and os.path.exists(OUTPUT_DIR):
         assert len([filename for filename in os.listdir(OUTPUT_DIR) if
-                    filename != 'README.md' and not filename.startswith('.')]) == 0, f"""In order to overwrite you must empty the output dir {OUTPUT_DIR}
+                    filename != 'README.md' and not filename.startswith(
+                        '.')]) == 0, f"""In order to overwrite you must empty the output dir {OUTPUT_DIR}
 Consider running:
 for filename in os.listdir('{OUTPUT_DIR}'):
     if filename != 'README.md':
@@ -44,5 +45,6 @@ for filename in os.listdir('{OUTPUT_DIR}'):
             f"Current number of oligos is {len(oligo_barcoded_sequences)}")
     print(f"Finished creating sequences. Find them in {BARCODED_NUC_FILE}")
     print(f"Converting all sequences to order")
-    transfer_to_order(oligo_barcoded_sequences)
+    if len(files) > 0:
+        transfer_to_order(oligo_barcoded_sequences)
     print(f"Find file of order in {ORDER_FILE}")

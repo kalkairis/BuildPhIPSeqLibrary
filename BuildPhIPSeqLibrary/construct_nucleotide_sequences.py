@@ -28,8 +28,8 @@ def code_one_aa_sequence_to_nuc(aa_seq, num_tries=10):
         # Ensure no restricted sequences are in the nucleotide sequence
         if has_no_restricted_sequences(ret):
             return ret
-    logging.warning(f"Failed to convert sequence from amino acids to nucleotides without adding restricted sequences"
-                    f"{aa}")
+    logging.warning(f"Failed to convert sequence from amino acids to nucleotides without adding restricted sequences "
+                    f"{aa_seq}")
     return None
 
 
