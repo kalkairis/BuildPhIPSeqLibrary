@@ -1,4 +1,4 @@
-from BuildPhIPSeqLibrary.config import PREFIX_PROMOTER, SUFFIX_PROMOTER, ORDER_FILE
+from BuildPhIPSeqLibrary.config import PREFIX, SUFFIX ORDER_FILE
 
 
 def transfer_to_order(oligo_barcoded_sequences):
