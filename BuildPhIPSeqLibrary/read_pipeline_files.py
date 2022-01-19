@@ -17,10 +17,9 @@ def read_oligo_sequences_to_file(file_path=None):
     if os.path.exists(file_path):
         ret = pd.read_csv(file_path, index_col=0)
         ret['origins'] = ret['origins'].apply(eval)
-        ret['mapped'] = ret['mapped'].apply(eval)
         return ret
     else:
-        return pd.DataFrame(columns=['origins', 'mapped', 'oligo_aa_sequence', 'oligo_id']).set_index('oligo_id')
+        return pd.DataFrame(columns=['origins', 'oligo_aa_sequence', 'oligo_id']).set_index('oligo_id')
 
 
 def read_sequence_ids_file(file_path=None):

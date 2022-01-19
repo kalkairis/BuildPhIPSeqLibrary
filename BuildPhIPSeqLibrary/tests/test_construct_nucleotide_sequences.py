@@ -47,7 +47,7 @@ class Test(TestCase):
                 oligo_rows[f'barcode_{i}'] = oligo_rows['nuc_sequence'].apply(
                     lambda nuc: get_barcode_from_nuc_seq(nuc, start_location, barcode_length))
                 start_location += barcode_length
-            ret = create_new_nuc_sequence(oligo_rows.iloc[0].copy(), oligo_rows)
+            ret, _ = create_new_nuc_sequence(oligo_rows.iloc[0].copy(), oligo_rows)
             barcoded_length = 3 * math.ceil(sum(BARCODE_NUC_LENGTHS) / 3)
             self.assertEqual(ret['nuc_sequence'][barcoded_length:],
                              oligo_rows.iloc[0]['nuc_sequence'][barcoded_length:])
