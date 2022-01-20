@@ -2,44 +2,37 @@
 This code maps the origin as well as the possible mappings of each oligo.
 Note that this is NOT part of the main library building code.
 """
+import pandas
+import re
 import time
+from multiprocessing import Pool
+
+from BuildPhIPSeqLibrary.read_pipeline_files import read_oligo_sequences_to_file, read_sequence_ids_file
+from BuildPhIPSeqLibrary.config import NUM_MAPPING_THREADS, MAPPED_OLIGO_SEQUENCES_FILE
 
 
-def map_single_oligo_to_sequences_list(oligo, sequences_dict):
+def map_single_oligo_to_sequences_list(inp):
+    id, oligo, sequences_dict = inp
     ret = []
     if '*' in oligo:
         oligo = oligo[:oligo.index('*')]
     for sequence_id, sequence in sequences_dict.items():
         for position in re.finditer(oligo, sequence):
             ret.append((sequence_id, position.span()[0]))
-    return ret
+    return [id, ret]
 
-# def map_sequences(oligos_aa_sequences, id_to_sequences):
-#     print("Merge oligos sequences, this takes time", time.ctime())
-#     #TODO: read existing oligos. base_df = read_oligo_sequences_to_file()
-#
-#     # Stage 1: add oligos already in origins into origins list and remove from new sequences
-#     existing_oligos = oligos_aa_sequences.index.intersection(base_df['oligo_aa_sequence'].values)
-#     for existing_oligo in existing_oligos:
-#         base_df.loc[base_df['oligo_aa_sequence'].eq(existing_oligo).idxmax(), 'origins'] += \
-#             oligos_aa_sequences.loc[existing_oligo]['origins']
-#     oligos_aa_sequences.drop(index=existing_oligos, inplace=True)
-#
-#     # Stage 2: map newly added sequences into existing oligos list
-#     base_df['mapped'] += base_df['oligo_aa_sequence'].apply(
-#         lambda oligo: map_single_oligo_to_sequences_list(oligo, id_to_sequences))
-#
-#     # Stage 3: map newly added oligos to all sequences (from sequences IDs file)
-#     all_ids_to_sequences = read_sequence_ids_file()['AA_sequence'].to_dict()
-#     oligos_aa_sequences.reset_index(inplace=True)
-#     oligos_aa_sequences['mapped'] = oligos_aa_sequences['oligo_aa_sequence'].apply(
-#         lambda oligo: map_single_oligo_to_sequences_list(oligo, all_ids_to_sequences))
-#     running_index = 0 if len(base_df) == 0 else base_df.index.str.split('_').str[1].astype(int).max() + 1
-#     oligos_aa_sequences['oligo_id'] = list(
-#         map(lambda idx: f'oligo_{idx}', range(running_index, running_index + len(oligos_aa_sequences))))
-#     oligos_aa_sequences.set_index('oligo_id', inplace=True)
-#
-#     # Stage 4: concatenate dfs
-#     ret = pd.concat([base_df, oligos_aa_sequences], axis=0, ignore_index=False)
-#     ret.to_csv(OLIGO_SEQUENCES_FILE)
-#     return ret, oligos_aa_sequences
+
+if __name__ == "__main__":
+    p = Pool(NUM_MAPPING_THREADS)
+
+    aa_seqs = read_sequence_ids_file().AA_sequence.to_dict()
+    aa_olis = read_oligo_sequences_to_file()
+    lst = []
+    for id in aa_olis.index:
+        lst.append((id, aa_olis.loc[id].oligo_aa_sequence, aa_seqs))
+    print("Running maps on %d oligos, with %d threads" % (len(lst), NUM_MAPPING_THREADS), time.ctime())
+    maps = p.map(map_single_oligo_to_sequences_list, lst)
+    aa_olis['mapped'] = pandas.DataFrame(maps, columns=['oligo_id', 'mapped']).set_index('oligo_id')
+    aa_olis.to_csv(MAPPED_OLIGO_SEQUENCES_FILE)
+    print("Mapping done on %d oligos" % len(lst), time.ctime())
+    p.close()
