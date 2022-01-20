@@ -5,6 +5,8 @@ import pandas as pd
 if os.path.exists(__file__.replace('.py', '_local.py')):
     from config_local import *
 
+NUM_MAPPING_THREADS = globals().get('NUM_MAPPING_THREADS', 30)
+
 # Directory paths
 DATA_DIR = globals().get('DATA_DIR', os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Data'))
 INPUT_DIR = globals().get('INPUT_DIR', os.path.join(DATA_DIR, 'Input'))
@@ -15,6 +17,8 @@ MOCK_DATA_DIR = globals().get('MOCK_DATA_DIR', os.path.join(os.path.dirname(os.p
 FILES_INPUT_HASH_FILE = globals().get('FILES_INPUT_HASH_FILE', os.path.join(OUTPUT_DIR, 'files_hash.csv'))
 SEQUENCES_IDS_FILE = globals().get('SEQUENCES_IDS_FILE', os.path.join(OUTPUT_DIR, 'sequences_ids.csv'))
 OLIGO_SEQUENCES_FILE = globals().get('OLIGO_SEQUENCES_FILE', os.path.join(OUTPUT_DIR, 'oligos_sequence.csv'))
+MAPPED_OLIGO_SEQUENCES_FILE = globals().get('MAPPED_OLIGO_SEQUENCES_FILE', os.path.join(OUTPUT_DIR,
+                                                                                        'mapped_oligos_sequence.csv'))
 BARCODED_NUC_FILE = globals().get('BARCODED_NUC_FILE', os.path.join(OUTPUT_DIR, 'barcoded_nuc_file.csv'))
 UNCONVERTED_SEQUENCES_FILE = globals().get('UNCONVERTED_SEQUENCES_FILE',
                                            os.path.join(OUTPUT_DIR, 'unconverted_sequences.csv'))
