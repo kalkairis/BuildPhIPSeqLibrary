@@ -144,7 +144,7 @@ def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=100):
     logging.warning(
         f"Failed to barcode sequence from amino acids to nucleotides without adding restricted sequences "
         f"{aa_to_recode}")
-    return oligo_row, 1
+    return oligo_row, 2
 
 
 def get_barcode_from_nuc_seq(nuc_seq, start_location, barcode_length):
@@ -167,10 +167,11 @@ def barcode_sequences(oligo_sequences):
     cols = existing_barcodes.columns
     uncoded_oligos = []
     # Add barcoded oligos one at a time
-    cnt = [0, 0, 0]
+    cnt = [0, 0, 0, 0]
     for oligo_id, oligo_row in oligo_sequences.iterrows():
         if (cnt[0] % 100) == 0:
-            print("At %d of %d (%d needed recode, %d needed full)" % (cnt[0], len(oligo_sequences), cnt[1], cnt[2]),
+            print("At %d of %d (%d needed recode, %d needed random, %d failed)" % (cnt[0], len(oligo_sequences),
+                                                                                   cnt[1], cnt[2], cnt[3]),
                   time.ctime())
         cnt[0] += 1
         if all([oligo_row[f'barcode_{i}'] not in existing_barcodes[f'barcode_{i}'].values for i in
@@ -180,7 +181,10 @@ def barcode_sequences(oligo_sequences):
             cnt[1] += 1
             # Try to create a new barcode section
             new_oligo_row, full = create_new_nuc_sequence(oligo_row, existing_barcodes)
-            cnt[2] += full
+            if full == 1:
+                cnt[2] += 1
+            elif full == 2:
+                cnt[3] += 1
             if new_oligo_row['nuc_sequence'] is not None:
                 existing_barcodes = existing_barcodes.append(new_oligo_row[cols])
             else:
