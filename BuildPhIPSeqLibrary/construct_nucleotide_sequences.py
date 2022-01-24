@@ -113,7 +113,7 @@ def try_iterative_correct(best, oligo_row, existing_barcodes):
     return None
 
 
-def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=100):
+def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=50, try_random_probs=False):
     global cnt_tries
 
     aa_range_to_recode = math.ceil(sum(BARCODE_NUC_LENGTHS) / 3)
@@ -125,7 +125,11 @@ def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=100):
         nuc_seq_to_maintain = oligo_row['nuc_sequence'][:-3 * aa_range_to_recode]
     best = []
     errs_best = 6
-    for by_codon_probabilities in [True, False]:
+    if try_random_probs:
+        codon_prob_opts = [True, False]
+    else:
+        codon_prob_opts = [True]
+    for by_codon_probabilities in codon_prob_opts:
         for _ in range(num_tries):
             new_nuc_barcode_area = code_one_aa_sequence_to_nuc(aa_to_recode, num_tries=1,
                                                                by_codon_frequencies=by_codon_probabilities, log=False)
@@ -205,6 +209,8 @@ def barcode_sequences(oligo_sequences):
                 existing_barcodes = existing_barcodes.append(new_oligo_row[cols])
             else:
                 uncoded_oligos.append(new_oligo_row.copy())
+    print("Finished (%d recode, %d random probs, %d correctd, %d failed)" % (cnt[1], cnt[2], cnt[3], cnt[4]),
+          time.ctime())
     # Save barcodes
     existing_barcodes.to_csv(BARCODED_NUC_FILE)
     if len(uncoded_oligos) > 0:
