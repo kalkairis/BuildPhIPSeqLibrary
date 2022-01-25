@@ -1,6 +1,8 @@
 import math
+import multiprocessing
 import os
 import shutil
+from multiprocessing.dummy import Pool
 from unittest import TestCase, mock
 
 import numpy as np
@@ -10,7 +12,8 @@ from BuildPhIPSeqLibrary.config import RESTRICTED_SEQUENCES, AMINO_ACIDS, AMINO_
     OLIGO_AA_LENGTH, MOCK_DATA_DIR
 from BuildPhIPSeqLibrary.construct_nucleotide_sequences import has_no_restricted_sequences, code_one_aa_sequence_to_nuc, \
     get_barcode_from_nuc_seq, create_new_nuc_sequence, barcode_sequences, iterative_barcode_construction, \
-    get_all_barcodes, iterative_correction_of_single_barcode
+    get_all_barcodes, iterative_correction_of_single_barcode, aa_to_nuc
+from BuildPhIPSeqLibrary.read_pipeline_files import read_oligo_sequences_to_file
 
 
 class Test(TestCase):
@@ -213,6 +216,16 @@ class Test(TestCase):
                             get_subset_of_sequence(ret['nuc_sequence'], 0, length_of_changed_barcode,
                                                    barcode_at_5_prime))
                         self.assertNotIn(oligo_row['barcode_0'], existing_barcodes['barcode_0'].values)
+
+    @mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.OLIGO_SEQUENCES_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'oligos_sequence.csv'))
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.update_unconverted_oligos_file', print)
+    @mock.patch('pandas.DataFrame.to_csv', print)
+    @mock.patch('multiprocessing.Pool', Pool)
+    def test_aa_to_nuc(self):
+        aa_oligos = read_oligo_sequences_to_file()
+        ret = aa_to_nuc(aa_oligos)
+        self.assertEqual(len(aa_oligos), len(ret))
 
 
 def get_subset_of_sequence(seq, start, end, not_reverse):

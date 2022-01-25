@@ -243,7 +243,7 @@ def update_unconverted_oligos_file(unconverted_oligos):
 def aa_to_nuc(oligos_aa_sequences):
     pool = Pool(NUM_MAPPING_THREADS)
     oligos_aa_sequences['nuc_sequence'] = pool.starmap(code_one_aa_sequence_to_nuc,
-                                                       oligos_aa_sequences.oligo_aa_sequence.values)
+                                                       oligos_aa_sequences[['oligo_aa_sequence']].values)
     pool.close()
     unconverted_oligos = oligos_aa_sequences[oligos_aa_sequences['nuc_sequence'].isnull()]
     if len(unconverted_oligos) > 0:
