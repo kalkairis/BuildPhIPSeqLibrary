@@ -121,5 +121,6 @@ class Test(TestCase):
         oligos_df = split_sequences_to_oligos(sequence_dict)
         with mock.patch('BuildPhIPSeqLibrary.split_sequences_to_oligos.OLIGO_SEQUENCES_FILE',
                         os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'oligos_sequence.csv')):
-            ret, _ = merge_sequences(oligos_df, sequence_dict)
+            with mock.patch('pandas.DataFrame.to_csv') as csv_mock:
+                ret, _ = merge_sequences(oligos_df, sequence_dict)
         self.assertTrue(ret['origins'].apply(len).eq(1).all())
