@@ -9,7 +9,8 @@ import pandas as pd
 from BuildPhIPSeqLibrary.config import RESTRICTED_SEQUENCES, AMINO_ACIDS, AMINO_INFO, BARCODE_NUC_LENGTHS, \
     OLIGO_AA_LENGTH, MOCK_DATA_DIR
 from BuildPhIPSeqLibrary.construct_nucleotide_sequences import has_no_restricted_sequences, code_one_aa_sequence_to_nuc, \
-    get_barcode_from_nuc_seq, create_new_nuc_sequence, barcode_sequences
+    get_barcode_from_nuc_seq, create_new_nuc_sequence, barcode_sequences, iterative_barcode_construction, \
+    get_all_barcodes, iterative_correction_of_single_barcode
 
 
 class Test(TestCase):
@@ -106,77 +107,116 @@ class Test(TestCase):
                     self.assertEqual(len(unconverted), 5)
                     self.assertEqual(len(ret) + len(unconverted), (num_repetitions ** num_aa_in_barcode) + 1)
 
-    # def test_iterative_barcode_construction(self):
-    #     for barcode_nuc_lengths in [[3, 6], [4, 5], [3, 5]]:
-    #         barcode_size_in_aa = math.ceil(sum(barcode_nuc_lengths) / 3)
-    #         with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_NUC_LENGTHS',
-    #                         barcode_nuc_lengths):
-    #             with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_IN_5_PRIME_END', True):
-    #                 aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[0] * 6
-    #                 nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
-    #                 existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
-    #                     map(lambda i: f"barcode_{i}", range(len(barcode_nuc_lengths)))),
-    #                                                  data=[['oligo_1', nuc_seq, nuc_seq[:barcode_nuc_lengths[0]],
-    #                                                         nuc_seq[barcode_nuc_lengths[0]:sum(
-    #                                                             barcode_nuc_lengths)]]]).set_index(
-    #                     'oligo_id')
-    #                 ret = iterative_barcode_construction(aa_seq[:barcode_size_in_aa], '',
-    #                                                      nuc_seq[3 * barcode_size_in_aa:],
-    #                                                      existing_barcodes)
-    #                 self.assertIsNone(ret)
-    #
-    #                 aa_seq = 'F' + aa_seq[1:]
-    #                 nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
-    #                 ret = iterative_barcode_construction(aa_seq[:barcode_size_in_aa], '',
-    #                                                      nuc_seq[3 * barcode_size_in_aa:],
-    #                                                      existing_barcodes)
-    #                 self.assertIsNone(ret)
-    #
-    #                 aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[-1] * 6
-    #                 nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
-    #                 existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
-    #                     map(lambda i: f"barcode_{i}", range(len(barcode_nuc_lengths)))),
-    #                                                  data=[['oligo_1', nuc_seq, nuc_seq[:barcode_nuc_lengths[0]],
-    #                                                         nuc_seq[barcode_nuc_lengths[0]:sum(
-    #                                                             barcode_nuc_lengths)]]]).set_index(
-    #                     'oligo_id')
-    #                 ret = iterative_barcode_construction(aa_seq[:barcode_size_in_aa], '',
-    #                                                      nuc_seq[3 * barcode_size_in_aa:],
-    #                                                      existing_barcodes)
-    #                 self.assertIsNotNone(ret)
-    #                 self.assertEqual(len(ret), len(nuc_seq))
-    #
-    #             with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_IN_5_PRIME_END', False):
-    #                 aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[0] * 6
-    #                 nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
-    #                 existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
-    #                     map(lambda i: f"barcode_{i}", range(len([3, 6])))),
-    #                                                  data=[['oligo_1', nuc_seq, nuc_seq[-barcode_nuc_lengths[0]:],
-    #                                                         nuc_seq[-(sum(barcode_nuc_lengths)):-barcode_nuc_lengths[
-    #                                                             0]]]]).set_index(
-    #                     'oligo_id')
-    #                 ret = iterative_barcode_construction(aa_seq[-barcode_size_in_aa:],
-    #                                                      nuc_seq[:-(3 * barcode_size_in_aa)], '',
-    #                                                      existing_barcodes)
-    #                 self.assertIsNone(ret)
-    #
-    #                 aa_seq = aa_seq[:-1] + 'F'
-    #                 nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
-    #                 ret = iterative_barcode_construction(aa_seq[-barcode_size_in_aa:],
-    #                                                      nuc_seq[:-(3 * barcode_size_in_aa)], '',
-    #                                                      existing_barcodes)
-    #                 self.assertIsNone(ret)
-    #
-    #                 aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[-1] * 6
-    #                 nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
-    #                 existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
-    #                     map(lambda i: f"barcode_{i}", range(len([3, 6])))),
-    #                                                  data=[['oligo_1', nuc_seq, nuc_seq[-barcode_nuc_lengths[0]:],
-    #                                                         nuc_seq[-(sum(barcode_nuc_lengths)):-barcode_nuc_lengths[
-    #                                                             0]]]]).set_index(
-    #                     'oligo_id')
-    #                 ret = iterative_barcode_construction(aa_seq[-barcode_size_in_aa:],
-    #                                                      nuc_seq[:-(3 * barcode_size_in_aa)], '',
-    #                                                      existing_barcodes)
-    #                 self.assertIsNotNone(ret)
-    #                 self.assertEqual(len(ret), len(nuc_seq))
+    def test_iterative_barcode_construction(self):
+        for barcode_nuc_lengths in [[3, 6], [4, 5], [3, 5]]:
+            barcode_size_in_aa = math.ceil(sum(barcode_nuc_lengths) / 3)
+            with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_NUC_LENGTHS',
+                            barcode_nuc_lengths):
+                with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_IN_5_PRIME_END', True):
+                    aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[0] * 6
+                    nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
+                    existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
+                        map(lambda i: f"barcode_{i}", range(len(barcode_nuc_lengths)))),
+                                                     data=[['oligo_1', nuc_seq, nuc_seq[:barcode_nuc_lengths[0]],
+                                                            nuc_seq[barcode_nuc_lengths[0]:sum(
+                                                                barcode_nuc_lengths)]]]).set_index(
+                        'oligo_id')
+                    ret = iterative_barcode_construction(aa_seq[:barcode_size_in_aa], '',
+                                                         nuc_seq[3 * barcode_size_in_aa:],
+                                                         existing_barcodes)
+                    self.assertIsNone(ret)
+
+                    aa_seq = 'F' + aa_seq[1:]
+                    nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
+                    ret = iterative_barcode_construction(aa_seq[:barcode_size_in_aa], '',
+                                                         nuc_seq[3 * barcode_size_in_aa:],
+                                                         existing_barcodes)
+                    self.assertIsNone(ret)
+
+                    aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[-1] * 6
+                    nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
+                    existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
+                        map(lambda i: f"barcode_{i}", range(len(barcode_nuc_lengths)))),
+                                                     data=[['oligo_1', nuc_seq, nuc_seq[:barcode_nuc_lengths[0]],
+                                                            nuc_seq[barcode_nuc_lengths[0]:sum(
+                                                                barcode_nuc_lengths)]]]).set_index(
+                        'oligo_id')
+                    ret = iterative_barcode_construction(aa_seq[:barcode_size_in_aa], '',
+                                                         nuc_seq[3 * barcode_size_in_aa:],
+                                                         existing_barcodes)
+                    self.assertIsNotNone(ret)
+                    self.assertEqual(len(ret), len(nuc_seq))
+
+                with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_IN_5_PRIME_END', False):
+                    aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[0] * 6
+                    nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
+                    existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
+                        map(lambda i: f"barcode_{i}", range(len([3, 6])))),
+                                                     data=[['oligo_1', nuc_seq, nuc_seq[-barcode_nuc_lengths[0]:],
+                                                            nuc_seq[-(sum(barcode_nuc_lengths)):-barcode_nuc_lengths[
+                                                                0]]]]).set_index(
+                        'oligo_id')
+                    ret = iterative_barcode_construction(aa_seq[-barcode_size_in_aa:],
+                                                         nuc_seq[:-(3 * barcode_size_in_aa)], '',
+                                                         existing_barcodes)
+                    self.assertIsNone(ret)
+
+                    aa_seq = aa_seq[:-1] + 'F'
+                    nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
+                    ret = iterative_barcode_construction(aa_seq[-barcode_size_in_aa:],
+                                                         nuc_seq[:-(3 * barcode_size_in_aa)], '',
+                                                         existing_barcodes)
+                    self.assertIsNone(ret)
+
+                    aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[-1] * 6
+                    nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
+                    existing_barcodes = pd.DataFrame(columns=['oligo_id', 'nuc_sequence'] + list(
+                        map(lambda i: f"barcode_{i}", range(len([3, 6])))),
+                                                     data=[['oligo_1', nuc_seq, nuc_seq[-barcode_nuc_lengths[0]:],
+                                                            nuc_seq[-(sum(barcode_nuc_lengths)):-barcode_nuc_lengths[
+                                                                0]]]]).set_index(
+                        'oligo_id')
+                    ret = iterative_barcode_construction(aa_seq[-barcode_size_in_aa:],
+                                                         nuc_seq[:-(3 * barcode_size_in_aa)], '',
+                                                         existing_barcodes)
+                    self.assertIsNotNone(ret)
+                    self.assertEqual(len(ret), len(nuc_seq))
+
+    def test_iterative_correction_of_single_barcode(self):
+        for barcode_nuc_lengths in [[3, 6, 3], [4, 5, 3]]:
+            with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_NUC_LENGTHS',
+                            barcode_nuc_lengths):
+                for barcode_at_5_prime in [True, False]:
+                    with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_IN_5_PRIME_END',
+                                    barcode_at_5_prime):
+                        aa_seq = AMINO_INFO.groupby('amino_acid')['codon'].count().sort_values().index[
+                                     -1] * OLIGO_AA_LENGTH
+                        nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)
+                        oligo_row = {'oligo_id': 'oligo_1', 'nuc_sequence': nuc_seq, 'oligo_aa_sequence': aa_seq}
+                        oligo_row = get_all_barcodes(oligo_row)
+                        existing_barcodes = pd.Series(oligo_row).to_frame().T.set_index('oligo_id')
+                        nuc_seq = oligo_row['barcode_0']
+                        if barcode_at_5_prime:
+                            nuc_seq += code_one_aa_sequence_to_nuc(aa_seq)[barcode_nuc_lengths[0]:]
+                        else:
+                            nuc_seq = code_one_aa_sequence_to_nuc(aa_seq)[:-barcode_nuc_lengths[0]] + nuc_seq
+                        oligo_row['oligo_id'] = 'oligo_2'
+                        ret = iterative_correction_of_single_barcode([nuc_seq], oligo_row, existing_barcodes)
+                        length_of_changed_barcode = 3 * math.ceil(barcode_nuc_lengths[0] / 3)
+                        self.assertEqual(
+                            get_subset_of_sequence(nuc_seq, length_of_changed_barcode, len(nuc_seq),
+                                                   barcode_at_5_prime),
+                            get_subset_of_sequence(ret['nuc_sequence'], length_of_changed_barcode, len(nuc_seq),
+                                                   barcode_at_5_prime))
+                        self.assertNotEqual(
+                            get_subset_of_sequence(nuc_seq, 0, length_of_changed_barcode, barcode_at_5_prime),
+                            get_subset_of_sequence(ret['nuc_sequence'], 0, length_of_changed_barcode,
+                                                   barcode_at_5_prime))
+                        self.assertNotIn(oligo_row['barcode_0'], existing_barcodes['barcode_0'].values)
+
+
+def get_subset_of_sequence(seq, start, end, not_reverse):
+    if not_reverse:
+        return seq[start: end]
+    else:
+        return seq[::-1][start: end][::-1]

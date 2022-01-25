@@ -108,7 +108,7 @@ class Test(TestCase):
     @mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.OLIGO_SEQUENCES_FILE',
                 os.path.join(MOCK_DATA_DIR, 'Output', 'oligos_sequence.csv'))
     @mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.SEQUENCES_IDS_FILE',
-                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'sequences_ids.csv'))
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'single_origin_sequences_ids.csv'))
     def test_merge_and_map_sequences_with_existing_files(self):
         sequence_dict = read_sequence_ids_file()['AA_sequence'].to_dict()
         oligos_df = split_sequences_to_oligos(sequence_dict)
