@@ -7,4 +7,4 @@ File format should be .csv files, where the following columns MUST exist:
 
 - `sequence_ID` (must be unique within file)
 - `AA_sequence` the entire AA sequence to add into the library. This must include string sequences from the 20 AA
-  alphabet. No stop codons or unknown AAs.   
+  alphabet. No stop codons or unknown AAs (lines with unknown symbols will be ignored, with a warning message).   
