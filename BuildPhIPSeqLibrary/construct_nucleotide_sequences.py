@@ -1,6 +1,7 @@
 import logging
 import math
 import time
+from multiprocessing import Pool
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ import pandas as pd
 cnt_tries = 0
 
 from BuildPhIPSeqLibrary.config import AMINO_INFO, BARCODE_IN_5_PRIME_END, BARCODE_NUC_LENGTHS, RESTRICTED_SEQUENCES, \
-    UNCONVERTED_SEQUENCES_FILE, BARCODED_NUC_FILE, OLIGO_AA_LENGTH
+    UNCONVERTED_SEQUENCES_FILE, BARCODED_NUC_FILE, OLIGO_AA_LENGTH, NUM_MAPPING_THREADS
 from BuildPhIPSeqLibrary.read_pipeline_files import read_barcoded_nucleotide_files, read_unconverted_sequences
 
 
@@ -240,7 +241,10 @@ def update_unconverted_oligos_file(unconverted_oligos):
 
 
 def aa_to_nuc(oligos_aa_sequences):
-    oligos_aa_sequences['nuc_sequence'] = oligos_aa_sequences.oligo_aa_sequence.apply(code_one_aa_sequence_to_nuc)
+    pool = Pool(NUM_MAPPING_THREADS)
+    oligos_aa_sequences['nuc_sequence'] = pool.starmap(code_one_aa_sequence_to_nuc,
+                                                       oligos_aa_sequences.oligo_aa_sequence.values)
+    pool.close()
     unconverted_oligos = oligos_aa_sequences[oligos_aa_sequences['nuc_sequence'].isnull()]
     if len(unconverted_oligos) > 0:
         update_unconverted_oligos_file(unconverted_oligos)
