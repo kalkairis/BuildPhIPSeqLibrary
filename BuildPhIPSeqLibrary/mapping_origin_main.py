@@ -2,11 +2,11 @@
 This code maps the origin as well as the possible mappings of each oligo.
 Note that this is NOT part of the main library building code.
 """
-import regex as re
 import time
 from multiprocessing import Pool
 
 import pandas
+import regex as re
 
 from BuildPhIPSeqLibrary.config import NUM_MAPPING_THREADS, MAPPED_OLIGO_SEQUENCES_FILE
 from BuildPhIPSeqLibrary.read_pipeline_files import read_oligo_sequences_to_file, read_sequence_ids_file
