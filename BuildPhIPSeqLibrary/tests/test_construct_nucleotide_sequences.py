@@ -98,17 +98,16 @@ class Test(TestCase):
             with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_NUC_LENGTHS',
                             barcode_nuc_lengths):
                 with mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.BARCODE_NUC_LENGTHS', barcode_nuc_lengths):
-                    for _ in range(200):
-                        num_repetitions = AMINO_INFO['amino_acid'].eq('L').sum()
-                        aa_seq = 'L' * 3
-                        num_aa_in_barcode = math.ceil(barcode_nuc_lengths[0] / 3)
-                        oligos = pd.DataFrame(
-                            index=[f'oligo_{i}' for i in range((num_repetitions ** num_aa_in_barcode) + 1)],
-                            data={'oligo_aa_sequence': [aa_seq] * ((num_repetitions ** num_aa_in_barcode) + 1)})
-                        oligos['nuc_sequence'] = oligos.oligo_aa_sequence.apply(code_one_aa_sequence_to_nuc)
-                        ret, unconverted = barcode_sequences(oligos)
-                        self.assertEqual(len(unconverted), 5)
-                        self.assertEqual(len(ret) + len(unconverted), (num_repetitions ** num_aa_in_barcode) + 1)
+                    num_repetitions = AMINO_INFO['amino_acid'].eq('L').sum()
+                    aa_seq = 'L' * 3
+                    num_aa_in_barcode = math.ceil(barcode_nuc_lengths[0] / 3)
+                    oligos = pd.DataFrame(
+                        index=[f'oligo_{i}' for i in range((num_repetitions ** num_aa_in_barcode) + 1)],
+                        data={'oligo_aa_sequence': [aa_seq] * ((num_repetitions ** num_aa_in_barcode) + 1)})
+                    oligos['nuc_sequence'] = oligos.oligo_aa_sequence.apply(code_one_aa_sequence_to_nuc)
+                    ret, unconverted = barcode_sequences(oligos)
+                    self.assertEqual(len(unconverted), 5)
+                    self.assertEqual(len(ret) + len(unconverted), (num_repetitions ** num_aa_in_barcode) + 1)
 
     def test_iterative_barcode_construction(self):
         for barcode_nuc_lengths in [[3, 6], [4, 5], [3, 5]]:
