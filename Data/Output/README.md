@@ -6,7 +6,7 @@ In this directory all output files will be added during the run. This include:
   by rerunning the code from scratch.
 - `sequences_ids.csv`: A unique running index identifier based on origin file and the given sequence id.
 - `oligos_sequence.csv`: A table were each nucleotide oligo has its origin sequences (this can be more than one and is
-  therefore a list of sequence IDs and positions), and a list of mapped locations (again, can be more than one).
+  therefore a list of sequence IDs and positions).
 - `barcoded_nuc_file.csv`: A table of oligo_id, nucleotide sequence, and barcodes of the specific oligo. Oligos are
   uniquely barcoded for each one of the barcodes, allowing them to be identified by multiple sequences.
 - `unconverted_sequences.csv`: This is the list of oligos which have failed to be barcoded. Reasons vary from inability
@@ -16,3 +16,7 @@ In this directory all output files will be added during the run. This include:
   This is not likely in a large library but in smaller ones is a possibility.
 - `order_file.txt`: This is a simple text file of all nucleotide sequences to order including the promoters (on both
   ends of each oligo) as are defined in the config file. 
+- `mapped_oligos_sequence.csv`: A table which extends oligos_sequence.csv were each nucleotide oligo has its origin 
+  sequences (this can be more than one and is therefore a list of sequence IDs and positions), and a list of mapped 
+  locations (again, can be more than one), i.e. sequences it could have come from (but were not cut at these positions).
+  
