@@ -15,3 +15,6 @@ Run process:
 4. Run BuildPhIPSeqLibrary/main.py to create most output files.
 5. Run BuildPhIPSeqLibrary/mapping_origin_main.py (can be done offline, takes time to run) to create the 
    mapped_oligos_sequence output file.
+
+In order to ID a sequenced barcode, run BuildPhIPSeqLibrary/ID_from_barcode.py with the same configuration as the build, 
+and the the sequenced barcode as a parameter.
