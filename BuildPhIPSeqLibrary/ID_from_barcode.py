@@ -201,6 +201,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df_barcodes = read_barcoded_nucleotide_files()
-    run_test(df_barcodes, 100)
+    # run_test(df_barcodes, 100)
     ID, indels, errs, origins, other_maps = find_and_output(args.barcode, df_barcodes, True)
     print()
