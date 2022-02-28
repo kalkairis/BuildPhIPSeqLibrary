@@ -142,16 +142,12 @@ def run_test(df_barcodes, num_rounds):
             cnt[0] += 1
             if (indels == 0) and (errs == 0):
                 cnt[1] += 1
-            else:
-                print()
         pos = numpy.random.randint(0, sum(BARCODE_NUC_LENGTHS))
         ID, indels, errs, _, _ = find_and_output(input[:pos] + "N" + input[pos+1:], df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if (indels == 0) and (errs == 1):
                 cnt[1] += 1
-            else:
-                print()
 
         pos2 = numpy.random.randint(0, sum(BARCODE_NUC_LENGTHS))
         tmp_input = input[:pos] + "N" + input[pos + 1:]
@@ -161,16 +157,12 @@ def run_test(df_barcodes, num_rounds):
             cnt[0] += 1
             if (indels == 0) and (errs <= 2):
                 cnt[1] += 1
-            else:
-                print()
 
         ID, indels, errs, _, _ = find_and_output(input[:pos] + input[pos + 1:] + "N", df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if ((indels <= 1) and ((indels + errs) <= 1)) or ((indels == 0) and (errs <=2)):
                 cnt[1] += 1
-            else:
-                print()
 
         tmp_input = input[:pos] + "N" + input[pos + 1:]
         tmp_input = tmp_input[:pos2] + tmp_input[pos2 + 1:] + "N"
@@ -179,8 +171,6 @@ def run_test(df_barcodes, num_rounds):
             cnt[0] += 1
             if (indels <= 1) and ((indels + errs) <= 2):
                 cnt[1] += 1
-            else:
-                print()
 
         tmp_input = input[:pos] + input[pos + 1:] + "N"
         tmp_input = tmp_input[:pos2] + tmp_input[pos2 + 1:] + "N"
@@ -189,8 +179,6 @@ def run_test(df_barcodes, num_rounds):
             cnt[0] += 1
             if (indels <= 2) and ((indels + errs) <= 2):
                 cnt[1] += 1
-            else:
-                print()
 
     print(cnt, "of %d" % (num_rounds*6))
 
