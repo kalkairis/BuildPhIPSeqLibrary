@@ -106,7 +106,7 @@ def out_sources(ID, print_flag):
         for o in maps:
             if print_flag:
                 print("Position %d of %s (file %s)" % (o[1], seqs.loc[o[0]].sequence_ID, seqs.loc[o[0]].input_file))
-    return len(origins), len(maps)
+    return origins, maps
 
 
 def find_and_output(inp, df_barcodes, print_flag=False):
@@ -128,8 +128,8 @@ def find_and_output(inp, df_barcodes, print_flag=False):
 
     ID, indels, errs = find_ID(inp, ham, used_barcode, df_barcodes, print_flag)
     if ID is not None:
-        n_origins, n_maps = out_sources(ID, print_flag)
-    return ID, indels, errs, n_origins, n_maps
+        origins, maps = out_sources(ID, print_flag)
+    return ID, indels, errs, origins, maps
 
 
 def run_test(df_barcodes, num_rounds):
@@ -137,7 +137,7 @@ def run_test(df_barcodes, num_rounds):
     for i in range(num_rounds):
         oli = numpy.random.choice(df_barcodes.index)
         input = get_barcode_from_nuc_seq(df_barcodes.loc[oli].nuc_sequence, 0, sum(BARCODE_NUC_LENGTHS))
-        ID, indels, errs, n_origins, n_maps = find_and_output(input, df_barcodes)
+        ID, indels, errs, _, _ = find_and_output(input, df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if (indels == 0) and (errs == 0):
@@ -145,7 +145,7 @@ def run_test(df_barcodes, num_rounds):
             else:
                 print()
         pos = numpy.random.randint(0, sum(BARCODE_NUC_LENGTHS))
-        ID, indels, errs, n_origins, n_maps = find_and_output(input[:pos] + "N" + input[pos+1:], df_barcodes)
+        ID, indels, errs, _, _ = find_and_output(input[:pos] + "N" + input[pos+1:], df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if (indels == 0) and (errs == 1):
@@ -156,7 +156,7 @@ def run_test(df_barcodes, num_rounds):
         pos2 = numpy.random.randint(0, sum(BARCODE_NUC_LENGTHS))
         tmp_input = input[:pos] + "N" + input[pos + 1:]
         tmp_input = tmp_input[:pos2] + "N" + tmp_input[pos2 + 1:]
-        ID, indels, errs, n_origins, n_maps = find_and_output(tmp_input, df_barcodes)
+        ID, indels, errs, _, _ = find_and_output(tmp_input, df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if (indels == 0) and (errs <= 2):
@@ -164,7 +164,7 @@ def run_test(df_barcodes, num_rounds):
             else:
                 print()
 
-        ID, indels, errs, n_origins, n_maps = find_and_output(input[:pos] + input[pos + 1:] + "N", df_barcodes)
+        ID, indels, errs, _, _ = find_and_output(input[:pos] + input[pos + 1:] + "N", df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if ((indels <= 1) and ((indels + errs) <= 1)) or ((indels == 0) and (errs <=2)):
@@ -174,7 +174,7 @@ def run_test(df_barcodes, num_rounds):
 
         tmp_input = input[:pos] + "N" + input[pos + 1:]
         tmp_input = tmp_input[:pos2] + tmp_input[pos2 + 1:] + "N"
-        ID, indels, errs, n_origins, n_maps = find_and_output(tmp_input, df_barcodes)
+        ID, indels, errs, _, _ = find_and_output(tmp_input, df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if (indels <= 1) and ((indels + errs) <= 2):
@@ -184,7 +184,7 @@ def run_test(df_barcodes, num_rounds):
 
         tmp_input = input[:pos] + input[pos + 1:] + "N"
         tmp_input = tmp_input[:pos2] + tmp_input[pos2 + 1:] + "N"
-        ID, indels, errs, n_origins, n_maps = find_and_output(tmp_input, df_barcodes)
+        ID, indels, errs, _, _ = find_and_output(tmp_input, df_barcodes)
         if ID == oli:
             cnt[0] += 1
             if (indels <= 2) and ((indels + errs) <= 2):
@@ -202,5 +202,5 @@ if __name__ == "__main__":
 
     df_barcodes = read_barcoded_nucleotide_files()
     run_test(df_barcodes, 100)
-    ID, indels, errs, n_origins, n_maps = find_and_output(args.barcode, df_barcodes, True)
+    ID, indels, errs, origins, other_maps = find_and_output(args.barcode, df_barcodes, True)
     print()
