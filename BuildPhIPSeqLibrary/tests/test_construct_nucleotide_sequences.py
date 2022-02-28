@@ -99,7 +99,7 @@ class Test(TestCase):
                             barcode_nuc_lengths):
                 with mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.BARCODE_NUC_LENGTHS', barcode_nuc_lengths):
                     num_repetitions = AMINO_INFO['amino_acid'].eq('L').sum()
-                    aa_seq = 'L' * 6
+                    aa_seq = 'L' * 3
                     num_aa_in_barcode = math.ceil(barcode_nuc_lengths[0] / 3)
                     oligos = pd.DataFrame(
                         index=[f'oligo_{i}' for i in range((num_repetitions ** num_aa_in_barcode) + 1)],
