@@ -52,6 +52,7 @@ def find_ID(inp, ham, used_barcode, df_barcodes, print_flag):
         if errs <= ham:
             found.append(ID)
     if len(found) == 1:
+        errs = len(used_barcode) - df_IDs[df_IDs == found[0]].index.get_level_values(1).nunique()
         if print_flag:
             print("barcode identified with 1 indel and %d errors" % max(0, (errs-1)))
         return found[0], 1, max(0, (errs-1))
@@ -76,6 +77,7 @@ def find_ID(inp, ham, used_barcode, df_barcodes, print_flag):
         if errs <= ham:
             found.append(ID)
     if len(found) == 1:
+        errs = len(used_barcode) - df_IDs[df_IDs == found[0]].index.get_level_values(1).nunique()
         if print_flag:
             print("barcode identified with 2 indel and %d errors" % max(0, (errs-2)))
         return found[0], 2, max(0, (errs-2))
@@ -142,6 +144,7 @@ def run_test(df_barcodes, num_rounds):
             cnt[0] += 1
             if (indels == 0) and (errs == 0):
                 cnt[1] += 1
+
         pos = numpy.random.randint(0, sum(BARCODE_NUC_LENGTHS))
         ID, indels, errs, _, _ = find_and_output(input[:pos] + "N" + input[pos+1:], df_barcodes)
         if ID == oli:
