@@ -184,7 +184,7 @@ def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=50, try_rand
     oligo_row['nuc_sequence'] = None
     for i, barcode_length in enumerate(BARCODE_NUC_LENGTHS):
         oligo_row[f'barcode_{i}'] = None
-    logging.warning(
+    logging.debug(
         f"Failed to barcode sequence from amino acids to nucleotides without adding restricted sequences "
         f"{aa_to_recode}")
     return oligo_row, 3
