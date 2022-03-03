@@ -34,7 +34,7 @@ def get_input_files(files_hash_path=None, **kwargs):
         files_hash = pd.read_csv(files_hash_path, index_col=0)['0'].to_dict()
         for filename, file_hash in files_hash.items():
             if filename not in input_files:
-                logging.warning(
+                logging.debug(
                     f"File {filename} exists in previous version of the library construction,"
                     f" but is absent from {INPUT_DIR}.")
             else:

@@ -36,18 +36,24 @@ def add_sequences_to_files_list(sequences, filename, output_path=None):
     # Go over each sequence, if exists add with same ID else add with new ID
     new_sequences = []
     return_sequences = {}
+    failed_sequences = 0
+    total_sequences = 0
     for sequence, sequence_AA in sequences.items():
+        total_sequences += 1
         if sequence_AA in sequences_dict.keys():
             sequence_ID = sequences_dict[sequence_AA]
         else:
             if not is_amino_acid_sequence(sequence_AA):
-                logging.warning(f"Sequence {sequence}, in {filename} is not an amino acid sequence")
+                logging.debug(f"Sequence {sequence}, in {filename} is not an amino acid sequence")
+                failed_sequences += 1
                 continue
             sequence_ID = '_'.join(['seq', str(running_index_ID)])
             running_index_ID += 1
             return_sequences[sequence_ID] = sequence_AA
         new_sequences.append(
             {'seq_ID': sequence_ID, seq_AA_col: sequence_AA, seq_ID_col: sequence, 'input_file': filename})
+    logging.info(f"In {filename} added {total_sequences - failed_sequences} sequences out of {total_sequences}. "
+                 f"Remaining are not AA sequences.")
     new_sequences = pd.DataFrame(new_sequences).set_index('seq_ID')
     sequences_df = pd.concat([sequences_df, new_sequences])
     sequences_df.to_csv(output_path)
