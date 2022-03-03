@@ -3,7 +3,7 @@ import pandas
 import os
 import numpy
 
-from BuildPhIPSeqLibrary.config import BARCODE_NUC_LENGTHS, MAPPED_OLIGO_SEQUENCES_FILE
+from BuildPhIPSeqLibrary.config import BARCODE_NUC_LENGTHS, MAPPED_OLIGO_SEQUENCES_FILE, BARCODE_IN_5_PRIME_END
 
 from BuildPhIPSeqLibrary.read_pipeline_files import read_barcoded_nucleotide_files, read_sequence_ids_file
 from BuildPhIPSeqLibrary.construct_nucleotide_sequences import get_barcode_from_nuc_seq
@@ -20,7 +20,9 @@ def find_ID(inp, ham, used_barcode, df_barcodes, print_flag):
     start_location = 0
     IDs = {}
     for i, barcode_length in enumerate(used_barcode):
-        part = get_barcode_from_nuc_seq(inp, start_location, barcode_length)
+        part = inp[start_location:start_location + barcode_length]
+        if not BARCODE_IN_5_PRIME_END:
+            part = part[::-1]
         if part in df_barcodes[f'barcode_{i}'].values:
             IDs[(0, i)] = df_barcodes[df_barcodes[f'barcode_{i}'] == part].index[0]
         start_location += barcode_length
@@ -41,7 +43,9 @@ def find_ID(inp, ham, used_barcode, df_barcodes, print_flag):
         start_location = shft
         for i, barcode_length in enumerate(used_barcode):
             if (start_location >= 0) and ((start_location+barcode_length) < len(inp)):
-                part = get_barcode_from_nuc_seq(inp, start_location, barcode_length)
+                part = inp[start_location:start_location + barcode_length]
+                if not BARCODE_IN_5_PRIME_END:
+                    part = part[::-1]
                 if part in df_barcodes[f'barcode_{i}'].values:
                     IDs[(shft, i)] = df_barcodes[df_barcodes[f'barcode_{i}'] == part].index[0]
             start_location += barcode_length
@@ -66,7 +70,9 @@ def find_ID(inp, ham, used_barcode, df_barcodes, print_flag):
         start_location = shft
         for i, barcode_length in enumerate(used_barcode):
             if (start_location >= 0) and ((start_location+barcode_length) < len(inp)):
-                part = get_barcode_from_nuc_seq(inp, start_location, barcode_length)
+                part = inp[start_location:start_location + barcode_length]
+                if not BARCODE_IN_5_PRIME_END:
+                    part = part[::-1]
                 if part in df_barcodes[f'barcode_{i}'].values:
                     IDs[(shft, i)] = df_barcodes[df_barcodes[f'barcode_{i}'] == part].index[0]
             start_location += barcode_length
@@ -129,8 +135,10 @@ def find_and_output(inp, df_barcodes, print_flag=False):
         assert ('barcode_%d' % i) in df_barcodes.columns, "Given barcode file had no barcode_%d column" % i
 
     ID, indels, errs = find_ID(inp, ham, used_barcode, df_barcodes, print_flag)
-    if ID is not None:
-        origins, maps = out_sources(ID, print_flag)
+    if ID is None:
+        return ID, indels, errs, [], []
+
+    origins, maps = out_sources(ID, print_flag)
     return ID, indels, errs, origins, maps
 
 
@@ -138,7 +146,10 @@ def run_test(df_barcodes, num_rounds):
     cnt = [0, 0]
     for i in range(num_rounds):
         oli = numpy.random.choice(df_barcodes.index)
-        input = get_barcode_from_nuc_seq(df_barcodes.loc[oli].nuc_sequence, 0, sum(BARCODE_NUC_LENGTHS))
+        if BARCODE_IN_5_PRIME_END:
+            input = df_barcodes.loc[oli].nuc_sequence[:sum(BARCODE_NUC_LENGTHS)]
+        else:
+            input = df_barcodes.loc[oli].nuc_sequence[-sum(BARCODE_NUC_LENGTHS):][::-1]
         ID, indels, errs, _, _ = find_and_output(input, df_barcodes)
         if ID == oli:
             cnt[0] += 1
@@ -192,6 +203,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     df_barcodes = read_barcoded_nucleotide_files()
-    # run_test(df_barcodes, 100)
+    run_test(df_barcodes, 10)
     ID, indels, errs, origins, other_maps = find_and_output(args.barcode, df_barcodes, True)
     print()
