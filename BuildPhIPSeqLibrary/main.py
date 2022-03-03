@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os.path
 import time
 
@@ -22,32 +23,32 @@ for filename in os.listdir('{OUTPUT_DIR}'):
     if filename != 'README.md':
         os.remove(os.path.join('{OUTPUT_DIR}', filename))""""""
         """
-
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     files = get_input_files()
+    logging.basicConfig(level=logging.INFO)
     for filename in files:
-        print(f"Working on file {filename}", time.ctime())
-        print(f"{filename}: reading file", time.ctime())
+        logging.info(f"Working on file {filename}, {time.ctime()}")
+        logging.info(f"{filename}: reading file, {time.ctime()}")
         seq_id_to_sequences = read_file(filename)
-        print(f"{filename}: Got {len(seq_id_to_sequences)} sequences", time.ctime())
-        print(f"{filename}: Identifying new sequences", time.ctime())
+        logging.info(f"{filename}: Got {len(seq_id_to_sequences)} sequences, {time.ctime()}")
+        logging.info(f"{filename}: Identifying new sequences, {time.ctime()}")
         seq_id_to_sequences = add_sequences_to_files_list(seq_id_to_sequences, filename)
-        print(f"{filename}: Got {len(seq_id_to_sequences)} new sequences", time.ctime())
-        print(f"{filename}: Converting sequences to oligos", time.ctime())
+        logging.info(f"{filename}: Got {len(seq_id_to_sequences)} new sequences, {time.ctime()}")
+        logging.info(f"{filename}: Converting sequences to oligos, {time.ctime()}")
         all_oligos_aa_sequences, new_oligos_aa_sequences = split_and_map_new_sequences(seq_id_to_sequences)
-        print(f"{filename}: "
+        logging.info(f"{filename}: "
               f"Converted {len(new_oligos_aa_sequences)} new oligos "
-              f"overall {len(all_oligos_aa_sequences)} oligos", time.ctime())
-        print(f"{filename}: Barcoding oligos", time.ctime())
+              f"overall {len(all_oligos_aa_sequences)} oligos, {time.ctime()}")
+        logging.info(f"{filename}: Barcoding oligos, {time.ctime()}")
         oligo_barcoded_sequences = aa_to_nuc(new_oligos_aa_sequences)
-        print(
+        logging.info(
             f"{filename}: Finished barcoding oligos. "
-            f"Current number of oligos is {len(oligo_barcoded_sequences)}", time.ctime())
+            f"Current number of oligos is {len(oligo_barcoded_sequences)}, {time.ctime()}")
     if len(files) > 0:
-        print(f"Finished creating sequences. Find them in {BARCODED_NUC_FILE}", time.ctime())
-        print(f"Converting all sequences to order", time.ctime())
+        logging.info(f"Finished creating sequences. Find them in {BARCODED_NUC_FILE}, {time.ctime()}")
+        logging.info(f"Converting all sequences to order, {time.ctime()}")
         transfer_to_order(oligo_barcoded_sequences)
-        print(f"Find file of order in {ORDER_FILE}", time.ctime())
+        logging.info(f"Find file of order in {ORDER_FILE}, {time.ctime()}")
     else:
-        print("No new files")
+        logging.info("No new files")
