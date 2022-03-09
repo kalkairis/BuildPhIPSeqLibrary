@@ -1,6 +1,7 @@
 import logging
 import math
 import time
+import os
 from multiprocessing import Pool
 
 import numpy as np
@@ -9,7 +10,7 @@ import pandas as pd
 cnt_tries = 0
 
 from BuildPhIPSeqLibrary.config import AMINO_INFO, BARCODE_IN_5_PRIME_END, BARCODE_NUC_LENGTHS, RESTRICTED_SEQUENCES, \
-    UNCONVERTED_SEQUENCES_FILE, BARCODED_NUC_FILE, OLIGO_AA_LENGTH, NUM_MAPPING_THREADS
+    UNCONVERTED_SEQUENCES_FILE, BARCODED_NUC_FILE, OLIGO_AA_LENGTH, NUM_MAPPING_THREADS, OUTPUT_DIR
 from BuildPhIPSeqLibrary.read_pipeline_files import read_barcoded_nucleotide_files, read_unconverted_sequences
 
 
@@ -130,7 +131,7 @@ def get_all_barcodes(oligo_row):
     return oligo_row
 
 
-def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=50, try_random_probs=False):
+def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=50, try_random_probs=False, bad_aa_seqs=[]):
     global cnt_tries
 
     aa_range_to_recode = math.ceil(sum(BARCODE_NUC_LENGTHS) / 3)
@@ -140,54 +141,58 @@ def create_new_nuc_sequence(oligo_row, existing_barcodes, num_tries=50, try_rand
     else:
         aa_to_recode = oligo_row['oligo_aa_sequence'][-aa_range_to_recode:]
         nuc_seq_to_maintain = oligo_row['nuc_sequence'][:-3 * aa_range_to_recode]
-    nuc_sequences_with_least_failed = []
-    least_failed_barcodes = 6
-    if try_random_probs:
-        codon_prob_opts = [True, False]
-    else:
-        codon_prob_opts = [True]
-    for by_codon_probabilities in codon_prob_opts:
-        for _ in range(num_tries):
-            new_nuc_barcode_area = code_one_aa_sequence_to_nuc(aa_to_recode, num_tries=1,
-                                                               by_codon_frequencies=by_codon_probabilities, log=False)
-            if new_nuc_barcode_area is None:
-                continue
-            if BARCODE_IN_5_PRIME_END:
-                oligo_row['nuc_sequence'] = new_nuc_barcode_area + nuc_seq_to_maintain
-            else:
-                oligo_row['nuc_sequence'] = nuc_seq_to_maintain + new_nuc_barcode_area
-            if has_no_restricted_sequences(oligo_row['nuc_sequence']):
-                start_location = 0
-                for i, barcode_length in enumerate(BARCODE_NUC_LENGTHS):
-                    oligo_row[f'barcode_{i}'] = get_barcode_from_nuc_seq(oligo_row['nuc_sequence'], start_location,
-                                                                         barcode_length)
-                    start_location += barcode_length
-                if all([oligo_row[f'barcode_{i}'] not in existing_barcodes[f'barcode_{i}'].values for i in
-                        range(len(BARCODE_NUC_LENGTHS))]):
-                    return oligo_row, int(not by_codon_probabilities)
-                number_of_failed_barcodes = sum(
-                    [oligo_row[f'barcode_{i}'] in existing_barcodes[f'barcode_{i}'].values for i in
-                     range(len(BARCODE_NUC_LENGTHS))])
-                if number_of_failed_barcodes < least_failed_barcodes:
-                    least_failed_barcodes = number_of_failed_barcodes
-                    nuc_sequences_with_least_failed = [oligo_row['nuc_sequence']]
-                elif number_of_failed_barcodes == least_failed_barcodes:
-                    nuc_sequences_with_least_failed.append(oligo_row['nuc_sequence'])
+    if aa_to_recode not in bad_aa_seqs:
+        nuc_sequences_with_least_failed = []
+        least_failed_barcodes = 6
+        if try_random_probs:
+            codon_prob_opts = [True, False]
+        else:
+            codon_prob_opts = [True]
+        for by_codon_probabilities in codon_prob_opts:
+            for _ in range(num_tries):
+                new_nuc_barcode_area = code_one_aa_sequence_to_nuc(aa_to_recode, num_tries=1,
+                                                                   by_codon_frequencies=by_codon_probabilities, log=False)
+                if new_nuc_barcode_area is None:
+                    continue
+                if BARCODE_IN_5_PRIME_END:
+                    oligo_row['nuc_sequence'] = new_nuc_barcode_area + nuc_seq_to_maintain
+                else:
+                    oligo_row['nuc_sequence'] = nuc_seq_to_maintain + new_nuc_barcode_area
+                if has_no_restricted_sequences(oligo_row['nuc_sequence']):
+                    start_location = 0
+                    for i, barcode_length in enumerate(BARCODE_NUC_LENGTHS):
+                        oligo_row[f'barcode_{i}'] = get_barcode_from_nuc_seq(oligo_row['nuc_sequence'], start_location,
+                                                                             barcode_length)
+                        start_location += barcode_length
+                    if all([oligo_row[f'barcode_{i}'] not in existing_barcodes[f'barcode_{i}'].values for i in
+                            range(len(BARCODE_NUC_LENGTHS))]):
+                        return oligo_row, int(not by_codon_probabilities), None
+                    number_of_failed_barcodes = sum(
+                        [oligo_row[f'barcode_{i}'] in existing_barcodes[f'barcode_{i}'].values for i in
+                         range(len(BARCODE_NUC_LENGTHS))])
+                    if number_of_failed_barcodes < least_failed_barcodes:
+                        least_failed_barcodes = number_of_failed_barcodes
+                        nuc_sequences_with_least_failed = [oligo_row['nuc_sequence']]
+                    elif number_of_failed_barcodes == least_failed_barcodes:
+                        nuc_sequences_with_least_failed.append(oligo_row['nuc_sequence'])
 
-    # If num_tries random cases failed and there is only a single barcode that fails
-    # try to re-create the barcode iteratively.
-    if least_failed_barcodes == 1:
-        res = iterative_correction_of_single_barcode(nuc_sequences_with_least_failed, oligo_row, existing_barcodes)
-        if res is not None:
-            return oligo_row, 2
+        # If num_tries random cases failed and there is only a single barcode that fails
+        # try to re-create the barcode iteratively.
+        if least_failed_barcodes == 1:
+            res = iterative_correction_of_single_barcode(nuc_sequences_with_least_failed, oligo_row, existing_barcodes)
+            if res is not None:
+                return oligo_row, 2, None
+        logging.debug(
+            f"Failed to barcode sequence from amino acids to nucleotides without adding restricted sequences "
+            f"{aa_to_recode}")
+    else:
+        logging.debug(f"Skipping failed {aa_to_recode}")
+        aa_to_recode = None
 
     oligo_row['nuc_sequence'] = None
     for i, barcode_length in enumerate(BARCODE_NUC_LENGTHS):
         oligo_row[f'barcode_{i}'] = None
-    logging.debug(
-        f"Failed to barcode sequence from amino acids to nucleotides without adding restricted sequences "
-        f"{aa_to_recode}")
-    return oligo_row, 3
+    return oligo_row, 3, aa_to_recode
 
 
 def get_barcode_from_nuc_seq(nuc_seq, start_location, barcode_length):
@@ -205,7 +210,20 @@ def barcode_sequences(oligo_sequences):
         start_location += barcode_length
     existing_barcodes = read_barcoded_nucleotide_files()
     cols = existing_barcodes.columns
+
+    inds = oligo_sequences.index
+    for i, _ in enumerate(BARCODE_NUC_LENGTHS):
+        inds = oligo_sequences.loc[inds][~np.isin(oligo_sequences.loc[inds]['barcode_%d' % i],
+                                                  existing_barcodes['barcode_%d' % i])].index
+    for i, _ in enumerate(BARCODE_NUC_LENGTHS):
+        inds = oligo_sequences.loc[inds].drop_duplicates(['barcode_%d' % i]).index
+    print("%d of %d added with no correction" % (len(inds), len(oligo_sequences)))
+
+    existing_barcodes = pd.concat([existing_barcodes, oligo_sequences.loc[inds, cols]])
+    oligo_sequences = oligo_sequences.drop(inds)
+
     uncoded_oligos = []
+    bad_aa_seqs = []
     # Add barcoded oligos one at a time
     cnt = [0, 0, 0, 0, 0]
     for oligo_id, oligo_row in oligo_sequences.iterrows():
@@ -219,12 +237,14 @@ def barcode_sequences(oligo_sequences):
             existing_barcodes = existing_barcodes.append(oligo_row[cols])
         else:
             # Try to create a new barcode section
-            new_oligo_row, ret = create_new_nuc_sequence(oligo_row, existing_barcodes)
+            new_oligo_row, ret, bad_aa = create_new_nuc_sequence(oligo_row, existing_barcodes, bad_aa_seqs=bad_aa_seqs)
             cnt[ret + 1] += 1
             if new_oligo_row['nuc_sequence'] is not None:
                 existing_barcodes = existing_barcodes.append(new_oligo_row[cols])
             else:
                 uncoded_oligos.append(new_oligo_row.copy())
+            if bad_aa is not None:
+                bad_aa_seqs.append(bad_aa)
     print("Finished (%d recode, %d random probs, %d correctd, %d failed)" % (cnt[1], cnt[2], cnt[3], cnt[4]),
           time.ctime())
     # Save barcodes
