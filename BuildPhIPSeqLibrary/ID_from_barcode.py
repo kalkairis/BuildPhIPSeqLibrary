@@ -1,17 +1,14 @@
 import argparse
 import pandas
 import os
-import numpy
-
 from BuildPhIPSeqLibrary.config import BARCODE_NUC_LENGTHS, MAPPED_OLIGO_SEQUENCES_FILE, BARCODE_IN_5_PRIME_END
 
 from BuildPhIPSeqLibrary.read_pipeline_files import read_barcoded_nucleotide_files, read_sequence_ids_file
-from BuildPhIPSeqLibrary.construct_nucleotide_sequences import get_barcode_from_nuc_seq
 
 
-def get_maps(ID):
+def get_maps(oligo_id):
     if os.path.exists(MAPPED_OLIGO_SEQUENCES_FILE):
-        return pandas.read_csv(MAPPED_OLIGO_SEQUENCES_FILE, index_col=0).loc[ID]
+        return pandas.read_csv(MAPPED_OLIGO_SEQUENCES_FILE, index_col=0).loc[oligo_id]
     return None
 
 
@@ -45,7 +42,7 @@ def find_ID(inp, ham, used_barcode, allow_indel, df_barcodes, print_flag):
     for shft in [-1, 1]:
         start_location = shft
         for i, barcode_length in enumerate(used_barcode):
-            if (start_location >= 0) and ((start_location+barcode_length) < len(inp)):
+            if (start_location >= 0) and ((start_location + barcode_length) < len(inp)):
                 part = inp[start_location:start_location + barcode_length]
                 if not BARCODE_IN_5_PRIME_END:
                     part = part[::-1]
@@ -61,8 +58,8 @@ def find_ID(inp, ham, used_barcode, allow_indel, df_barcodes, print_flag):
     if len(found) == 1:
         errs = len(used_barcode) - df_IDs[df_IDs == found[0]].index.get_level_values(1).nunique()
         if print_flag:
-            print("barcode identified with 1 indel and %d errors" % max(0, (errs-1)))
-        return found[0], 1, max(0, (errs-1))
+            print("barcode identified with 1 indel and %d errors" % max(0, (errs - 1)))
+        return found[0], 1, max(0, (errs - 1))
     if (len(found) > 1) or (ham == 1):
         if print_flag:
             print("Can't ID barcode with 1 indel")
@@ -72,7 +69,7 @@ def find_ID(inp, ham, used_barcode, allow_indel, df_barcodes, print_flag):
     for shft in [-2, 2]:
         start_location = shft
         for i, barcode_length in enumerate(used_barcode):
-            if (start_location >= 0) and ((start_location+barcode_length) < len(inp)):
+            if (start_location >= 0) and ((start_location + barcode_length) < len(inp)):
                 part = inp[start_location:start_location + barcode_length]
                 if not BARCODE_IN_5_PRIME_END:
                     part = part[::-1]
@@ -88,8 +85,8 @@ def find_ID(inp, ham, used_barcode, allow_indel, df_barcodes, print_flag):
     if len(found) == 1:
         errs = len(used_barcode) - df_IDs[df_IDs == found[0]].index.get_level_values(1).nunique()
         if print_flag:
-            print("barcode identified with 2 indel and %d errors" % max(0, (errs-2)))
-        return found[0], 2, max(0, (errs-2))
+            print("barcode identified with 2 indel and %d errors" % max(0, (errs - 2)))
+        return found[0], 2, max(0, (errs - 2))
 
     if print_flag:
         print("Can't ID barcode with up to 2 indels")
@@ -148,69 +145,10 @@ def find_and_output(inp, allow_indel, df_barcodes=None, print_flag=False):
     return ID, indels, errs, origins, maps
 
 
-def run_test(num_rounds):
-    df_barcodes = read_barcoded_nucleotide_files()
-
-    cnt = [0, 0]
-    for i in range(num_rounds):
-        oli = numpy.random.choice(df_barcodes.index)
-        if BARCODE_IN_5_PRIME_END:
-            input = df_barcodes.loc[oli].nuc_sequence[:sum(BARCODE_NUC_LENGTHS)]
-        else:
-            input = df_barcodes.loc[oli].nuc_sequence[-sum(BARCODE_NUC_LENGTHS):][::-1]
-        ID, indels, errs, _, _ = find_and_output(input, False, df_barcodes)
-        if ID == oli:
-            cnt[0] += 1
-            if (indels == 0) and (errs == 0):
-                cnt[1] += 1
-
-        pos = numpy.random.randint(0, sum(BARCODE_NUC_LENGTHS))
-        ID, indels, errs, _, _ = find_and_output(input[:pos] + "N" + input[pos+1:], False, df_barcodes)
-        if ID == oli:
-            cnt[0] += 1
-            if (indels == 0) and (errs == 1):
-                cnt[1] += 1
-
-        pos2 = numpy.random.randint(0, sum(BARCODE_NUC_LENGTHS))
-        tmp_input = input[:pos] + "N" + input[pos + 1:]
-        tmp_input = tmp_input[:pos2] + "N" + tmp_input[pos2 + 1:]
-        ID, indels, errs, _, _ = find_and_output(tmp_input, False, df_barcodes)
-        if ID == oli:
-            cnt[0] += 1
-            if (indels == 0) and (errs <= 2):
-                cnt[1] += 1
-
-        ID, indels, errs, _, _ = find_and_output(input[:pos] + input[pos + 1:] + "N", True, df_barcodes)
-        if ID == oli:
-            cnt[0] += 1
-            if ((indels <= 1) and ((indels + errs) <= 1)) or ((indels == 0) and (errs <=2)):
-                cnt[1] += 1
-
-        tmp_input = input[:pos] + "N" + input[pos + 1:]
-        tmp_input = tmp_input[:pos2] + tmp_input[pos2 + 1:] + "N"
-        ID, indels, errs, _, _ = find_and_output(tmp_input, True, df_barcodes)
-        if ID == oli:
-            cnt[0] += 1
-            if (indels <= 1) and ((indels + errs) <= 2):
-                cnt[1] += 1
-
-        tmp_input = input[:pos] + input[pos + 1:] + "N"
-        tmp_input = tmp_input[:pos2] + tmp_input[pos2 + 1:] + "N"
-        ID, indels, errs, _, _ = find_and_output(tmp_input, True, df_barcodes)
-        if ID == oli:
-            cnt[0] += 1
-            if (indels <= 2) and ((indels + errs) <= 2):
-                cnt[1] += 1
-
-    print(cnt, "of %d" % (num_rounds*6))
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ID the source of a barcode.")
     parser.add_argument('barcode', type=str, help='the barcode to identify')
     parser.add_argument('--allow_indel', dest='allow_indel', default=False, action='store_true')
     args = parser.parse_args()
 
-    # run_test(10)
     ID, indels, errs, origins, other_maps = find_and_output(args.barcode, args.allow_indel, print_flag=True)
-    print()
