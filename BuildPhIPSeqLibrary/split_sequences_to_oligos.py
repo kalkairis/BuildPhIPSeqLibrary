@@ -55,7 +55,7 @@ def merge_sequences(oligos_aa_sequences, id_to_sequences):
     # Stage 1: add amino acid oligos already in origins into origins list and remove from new sequences
     existing_oligos = oligos_aa_sequences.index.intersection(base_df['oligo_aa_sequence'].values)
     for existing_oligo in existing_oligos:
-        base_df.loc[base_df['oligo_aa_sequence'].eq(existing_oligo).idxmax(), 'origins'] += \
+        base_df.at[base_df['oligo_aa_sequence'].eq(existing_oligo).idxmax(), 'origins'] += \
             oligos_aa_sequences.loc[existing_oligo]['origins']
     oligos_aa_sequences.drop(index=existing_oligos, inplace=True)
 
