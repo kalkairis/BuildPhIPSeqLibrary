@@ -234,13 +234,13 @@ def barcode_sequences(oligo_sequences):
         cnt[0] += 1
         if all([oligo_row[f'barcode_{i}'] not in existing_barcodes[f'barcode_{i}'].values for i in
                 range(len(BARCODE_NUC_LENGTHS))]):
-            existing_barcodes = existing_barcodes.append(oligo_row[cols])
+            existing_barcodes = pd.concat([existing_barcodes, oligo_row[cols].to_frame().T])
         else:
             # Try to create a new barcode section
             new_oligo_row, ret, bad_aa = create_new_nuc_sequence(oligo_row, existing_barcodes, bad_aa_seqs=bad_aa_seqs)
             cnt[ret + 1] += 1
             if new_oligo_row['nuc_sequence'] is not None:
-                existing_barcodes = existing_barcodes.append(new_oligo_row[cols])
+                existing_barcodes = pd.concat([existing_barcodes, new_oligo_row[cols].to_frame().T])
             else:
                 uncoded_oligos.append(new_oligo_row.copy())
             if bad_aa is not None:
