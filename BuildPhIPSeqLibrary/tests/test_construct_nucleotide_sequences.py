@@ -219,7 +219,7 @@ class Test(TestCase):
     @mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.OLIGO_SEQUENCES_FILE',
                 os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'oligos_sequence.csv'))
     @mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.BARCODED_NUC_FILE',
-                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'barcoded_nuc_file.csv'))
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'non_existing_barcoded_nuc_file.csv'))
     @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.update_unconverted_oligos_file', print)
     @mock.patch('pandas.DataFrame.to_csv', print)
     @mock.patch('multiprocessing.Pool', Pool)

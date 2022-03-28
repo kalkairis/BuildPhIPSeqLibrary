@@ -7,6 +7,8 @@ from BuildPhIPSeqLibrary.read_pipeline_files import read_sequence_ids_file
 
 
 def is_amino_acid_sequence(sequence):
+    if pd.isnull(sequence):
+        return False
     amino_acid_letters = set(AMINO_INFO['amino_acid'].unique())
     amino_acid_letters.remove('*')
     return all(list(map(lambda letter: letter in amino_acid_letters, list(sequence))))

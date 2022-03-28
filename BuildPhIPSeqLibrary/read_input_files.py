@@ -28,19 +28,19 @@ def get_input_files(files_hash_path=None, **kwargs):
         with open(filename, 'rb') as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
-        input_hashes[filename] = hash_md5.hexdigest()
+        input_hashes[os.path.basename(filename)] = hash_md5.hexdigest()
 
     if os.path.exists(files_hash_path):
         files_hash = pd.read_csv(files_hash_path, index_col=0)['0'].to_dict()
         for filename, file_hash in files_hash.items():
-            if filename not in input_files:
+            if os.path.join(INPUT_DIR, filename) not in input_files:
                 logging.debug(
                     f"File {filename} exists in previous version of the library construction,"
                     f" but is absent from {INPUT_DIR}.")
             else:
                 assert input_hashes[filename] == file_hash, f"File {filename} changed content. " \
                                                             f"Re-run library construction from scratch."
-                new_added_files.remove(filename)
+                new_added_files.remove(os.path.join(INPUT_DIR, filename))
         input_hashes.update(files_hash)
     pd.Series(input_hashes).to_csv(files_hash_path, header=True)
     if len(new_added_files) == 0:

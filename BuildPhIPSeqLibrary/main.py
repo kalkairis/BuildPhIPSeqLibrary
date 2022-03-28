@@ -28,22 +28,26 @@ for filename in os.listdir('{OUTPUT_DIR}'):
     files = get_input_files()
     logging.basicConfig(level=logging.INFO)
     for filename in files:
-        logging.info(f"Working on file {filename}, {time.ctime()}")
-        logging.info(f"{filename}: reading file, {time.ctime()}")
+        file_end = os.path.splitext(os.path.basename(filename))[0]
+        logging.info(f"Working on file {file_end}, {time.ctime()}")
+        logging.info(f"{file_end}: reading file, {time.ctime()}")
         seq_id_to_sequences = read_file(filename)
-        logging.info(f"{filename}: Got {len(seq_id_to_sequences)} sequences, {time.ctime()}")
-        logging.info(f"{filename}: Identifying new sequences, {time.ctime()}")
+        logging.info(f"{file_end}: Got {len(seq_id_to_sequences)} sequences, {time.ctime()}")
+        logging.info(f"{file_end}: Identifying new sequences, {time.ctime()}")
         seq_id_to_sequences = add_sequences_to_files_list(seq_id_to_sequences, filename)
-        logging.info(f"{filename}: Got {len(seq_id_to_sequences)} new sequences, {time.ctime()}")
-        logging.info(f"{filename}: Converting sequences to oligos, {time.ctime()}")
+        logging.info(f"{file_end}: Got {len(seq_id_to_sequences)} new sequences, {time.ctime()}")
+        if len(seq_id_to_sequences) == 0:
+            logging.info(f"{file_end}: Contributed no new sequences.")
+            continue
+        logging.info(f"{file_end}: Converting sequences to oligos, {time.ctime()}")
         all_oligos_aa_sequences, new_oligos_aa_sequences = split_and_map_new_sequences(seq_id_to_sequences)
-        logging.info(f"{filename}: "
+        logging.info(f"{file_end}: "
               f"Converted {len(new_oligos_aa_sequences)} new oligos "
               f"overall {len(all_oligos_aa_sequences)} oligos, {time.ctime()}")
-        logging.info(f"{filename}: Barcoding oligos, {time.ctime()}")
+        logging.info(f"{file_end}: Barcoding oligos, {time.ctime()}")
         oligo_barcoded_sequences = aa_to_nuc(new_oligos_aa_sequences)
         logging.info(
-            f"{filename}: Finished barcoding oligos. "
+            f"{file_end}: Finished barcoding oligos. "
             f"Current number of oligos is {len(oligo_barcoded_sequences)}, {time.ctime()}")
     if len(files) > 0:
         logging.info(f"Finished creating sequences. Find them in {BARCODED_NUC_FILE}, {time.ctime()}")
