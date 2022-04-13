@@ -3,7 +3,9 @@ import hashlib
 import logging
 import os.path
 
+import pandas
 import pandas as pd
+from Bio import SeqIO
 
 from BuildPhIPSeqLibrary.config import INPUT_DIR, seq_ID_col, seq_AA_col, FILES_INPUT_HASH_FILE
 
@@ -20,7 +22,7 @@ def get_input_files(files_hash_path=None, **kwargs):
     """
     if files_hash_path is None:
         files_hash_path = FILES_INPUT_HASH_FILE
-    input_files = glob.glob(os.path.join(INPUT_DIR, "*.csv"))
+    input_files = glob.glob(os.path.join(INPUT_DIR, "*.csv")) + glob.glob(os.path.join(INPUT_DIR, "*.fa"))
     new_added_files = set(input_files)
     input_hashes = {}
     for filename in input_files:
@@ -55,7 +57,13 @@ def read_file(file_path):
     :param file_path:
     :return: Dict from 'sequence_ID' to 'AA_sequence'.
     """
-    ret = pd.read_csv(file_path, usecols=[seq_ID_col, seq_AA_col])
+    if os.path.splitext(file_path)[1] == '.csv':
+        ret = pd.read_csv(file_path, usecols=[seq_ID_col, seq_AA_col])
+    else:
+        ret = []
+        for rec in SeqIO.parse(file_path, 'fasta'):
+            ret.append([rec.name, str(rec.seq)])
+        ret = pandas.DataFrame(ret, columns=[seq_ID_col, seq_AA_col])
     value_counts = ret[seq_ID_col].value_counts()
     value_counts = value_counts[value_counts.gt(1)]
     error_values = '\n'.join(value_counts.index.values)
