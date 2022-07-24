@@ -21,8 +21,8 @@ def is_in(origins, check_in):
 def create_subfigure_2_a(ax, fig, outer_spec):
     codon_usage = AMINO_INFO.set_index('codon')[['amino_acid', 'corrected_relative_frequency']]
 
-    path = "/net/mraid08/export/genie/Lab/Phage/NewLibraryConstruction/IEDB_test_case/"
-    file_template = os.path.join(path, "%s/Output/barcoded_nuc_file.csv")
+    path = os.path.join(os.path.dirname(__file__), 'data')
+    file_template = os.path.join(path, "%s_barcoded_nuc_file.csv")
     for f in ['infectious', 'allergens']:
         nuc_seqs = read_barcoded_nucleotide_files(file_template % f)['nuc_sequence']
         codon_usage[f] = 0
