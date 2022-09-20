@@ -24,6 +24,7 @@ BARCODED_NUC_FILE = globals().get('BARCODED_NUC_FILE', os.path.join(OUTPUT_DIR, 
 UNCONVERTED_SEQUENCES_FILE = globals().get('UNCONVERTED_SEQUENCES_FILE',
                                            os.path.join(OUTPUT_DIR, 'unconverted_sequences.csv'))
 ORDER_FILE = globals().get('ORDER_FILE', os.path.join(OUTPUT_DIR, 'order_file.txt'))
+EDGE_RESTRICTION_FILE = globals().get('EDGE_RESTRICTION_FILE', os.path.join(OUTPUT_DIR, 'edge_restrictions.csv'))
 
 # Column names
 seq_ID_col = 'sequence_ID'

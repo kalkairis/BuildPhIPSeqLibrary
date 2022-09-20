@@ -4,7 +4,7 @@ import os.path
 import time
 
 from BuildPhIPSeqLibrary.config import OUTPUT_DIR, BARCODED_NUC_FILE, ORDER_FILE
-from BuildPhIPSeqLibrary.construct_nucleotide_sequences import aa_to_nuc
+from BuildPhIPSeqLibrary.construct_nucleotide_sequences import aa_to_nuc, get_edge_restrictions
 from BuildPhIPSeqLibrary.output_to_order import transfer_to_order
 from BuildPhIPSeqLibrary.read_input_files import get_input_files, read_file
 from BuildPhIPSeqLibrary.sequence_ids import add_sequences_to_files_list
@@ -24,7 +24,7 @@ for filename in os.listdir('{OUTPUT_DIR}'):
         os.remove(os.path.join('{OUTPUT_DIR}', filename))""""""
         """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-
+    get_edge_restrictions()
     files = get_input_files()
     logging.basicConfig(level=logging.INFO)
     for filename in files:

@@ -7,11 +7,13 @@ from unittest import TestCase, mock
 import numpy as np
 import pandas as pd
 
+from BuildPhIPSeqLibrary import construct_nucleotide_sequences
 from BuildPhIPSeqLibrary.config import RESTRICTED_SEQUENCES, AMINO_ACIDS, AMINO_INFO, BARCODE_NUC_LENGTHS, \
     OLIGO_AA_LENGTH, MOCK_DATA_DIR
 from BuildPhIPSeqLibrary.construct_nucleotide_sequences import has_no_restricted_sequences, code_one_aa_sequence_to_nuc, \
     get_barcode_from_nuc_seq, create_new_nuc_sequence, barcode_sequences, iterative_barcode_construction, \
-    get_all_barcodes, iterative_correction_of_single_barcode, aa_to_nuc
+    get_all_barcodes, iterative_correction_of_single_barcode, aa_to_nuc, compute_edge_restrictions, \
+    get_edge_restrictions
 from BuildPhIPSeqLibrary.read_pipeline_files import read_oligo_sequences_to_file
 
 
@@ -19,19 +21,62 @@ class Test(TestCase):
     def setUp(self) -> None:
         shutil.rmtree(os.path.join(MOCK_DATA_DIR, 'Output'), ignore_errors=True)
         os.makedirs(os.path.join(MOCK_DATA_DIR, 'Output'))
+        with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                        os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions.csv')):
+            get_edge_restrictions()
 
     def doCleanups(self) -> None:
         shutil.rmtree(os.path.join(MOCK_DATA_DIR, 'Output'), ignore_errors=True)
         os.makedirs(os.path.join(MOCK_DATA_DIR, 'Output'))
 
+    def test_compute_edge_restrictions(self):
+        with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.PREFIX', "GATGCGCCGTGGGAATTCT"):
+            with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.SUFFIX', "TGAAAGCTTGCCACCCGAC"):
+                with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.RESTRICTED_SEQUENCES', ["CTA"]):
+                    prefix_restrictions, suffix_restrictions = compute_edge_restrictions()
+                    self.assertEqual(prefix_restrictions, ['A'])
+                    self.assertEqual(suffix_restrictions, [])
+                    with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.RESTRICTED_SEQUENCES',
+                                    ["TCTCT"]):
+                        prefix_restrictions, suffix_restrictions = compute_edge_restrictions()
+                        self.assertEqual(prefix_restrictions, ['CTCT', 'CT'])
+                        self.assertEqual(suffix_restrictions, ['TCTC'])
+                    with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.RESTRICTED_SEQUENCES', ["TCT"]):
+                        prefix_restrictions, suffix_restrictions = compute_edge_restrictions()
+                        self.assertEqual(prefix_restrictions, ['CT'])
+                        self.assertEqual(suffix_restrictions, ['TC'])
+
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'Output', 'edge_restrictions.csv'))
+    def test_get_edge_restrictions(self):
+        with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.PREFIX', "GATGCGCCGTGGGAATTCT"):
+            with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.SUFFIX', "TGAAAGCTTGCCACCCGAC"):
+                with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.RESTRICTED_SEQUENCES', ["CTA"]):
+                    get_edge_restrictions()
+                    self.assertTrue(os.path.exists(os.path.join(MOCK_DATA_DIR, 'Output', 'edge_restrictions.csv')))
+                    self.assertEqual(construct_nucleotide_sequences.edge_restrictions, {'prefix': ['A'], 'suffix': []})
+                with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.RESTRICTED_SEQUENCES', ["CTAG"]):
+                    get_edge_restrictions()
+                    self.assertTrue(os.path.exists(os.path.join(MOCK_DATA_DIR, 'Output', 'edge_restrictions.csv')))
+                    self.assertEqual(construct_nucleotide_sequences.edge_restrictions, {'prefix': ['A'], 'suffix': []})
+
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions_small.csv'))
     def test_has_no_restricted_sequences(self):
+        get_edge_restrictions()
         self.assertTrue(has_no_restricted_sequences('ASDSAFEWRSDSKLFJDSFIERJFLKDSJFSAKLDRJEFD'))
         for restricted in RESTRICTED_SEQUENCES:
             self.assertFalse(has_no_restricted_sequences(restricted))
             self.assertFalse(has_no_restricted_sequences(
                 ''.join(np.random.choice(['A', 'G', 'C', 'T'], 10)) + restricted + ''.join(
                     np.random.choice(['A', 'G', 'C', 'T'], 4))))
+        self.assertFalse(has_no_restricted_sequences('AGCTASDSAFEWRSDSKLFJDSFIERJFLKDSJFSAKLDRJEFD'))
+        self.assertTrue(has_no_restricted_sequences('GAGCTASDSAFEWRSDSKLFJDSFIERJFLKDSJFSAKLDRJEFD'))
+        self.assertFalse(has_no_restricted_sequences('ASDSAFEWRSDSKLFJDSFIERJFLKDSJFSAKLDRJEFDGTAG'))
+        self.assertTrue(has_no_restricted_sequences('ASDSAFEWRSDSKLFJDSFIERJFLKDSJFSAKLDRJEFDGTAGDD'))
 
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions.csv'))
     def test_code_one_aa_sequence_to_nuc(self):
         aa_to_nuc = AMINO_INFO.set_index('codon')['amino_acid'].to_dict()
         for _ in range(5):
@@ -77,6 +122,8 @@ class Test(TestCase):
     @mock.patch('BuildPhIPSeqLibrary.read_pipeline_files.UNCONVERTED_SEQUENCES_FILE',
                 os.path.join(MOCK_DATA_DIR, 'Output', 'unconverted_sequences.csv'))
     @mock.patch('pandas.DataFrame.to_csv', print)
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions.csv'))
     def test_barcode_sequences(self):
         with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_IN_5_PRIME_END', True):
             barcode_aa_length = math.ceil(sum(BARCODE_NUC_LENGTHS) / 3)
@@ -109,6 +156,8 @@ class Test(TestCase):
                     self.assertEqual(len(unconverted), 5)
                     self.assertEqual(len(ret) + len(unconverted), (num_repetitions ** num_aa_in_barcode) + 1)
 
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions.csv'))
     def test_iterative_barcode_construction(self):
         for barcode_nuc_lengths in [[3, 6], [4, 5], [3, 5]]:
             barcode_size_in_aa = math.ceil(sum(barcode_nuc_lengths) / 3)
@@ -223,9 +272,12 @@ class Test(TestCase):
     @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.update_unconverted_oligos_file', print)
     @mock.patch('pandas.DataFrame.to_csv', print)
     @mock.patch('multiprocessing.Pool', Pool)
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions.csv'))
     def test_aa_to_nuc(self):
         aa_oligos = read_oligo_sequences_to_file()
         ret = aa_to_nuc(aa_oligos)
+        code_one_aa_sequence_to_nuc(aa_oligos.loc['oligo_100']['oligo_aa_sequence'])
         self.assertEqual(len(aa_oligos), len(ret))
 
 

@@ -1,5 +1,6 @@
 import logging
 import math
+import os
 import time
 from multiprocessing import Pool
 
@@ -9,12 +10,40 @@ import pandas as pd
 cnt_tries = 0
 
 from BuildPhIPSeqLibrary.config import AMINO_INFO, BARCODE_IN_5_PRIME_END, BARCODE_NUC_LENGTHS, RESTRICTED_SEQUENCES, \
-    UNCONVERTED_SEQUENCES_FILE, BARCODED_NUC_FILE, OLIGO_AA_LENGTH, NUM_MAPPING_THREADS
+    UNCONVERTED_SEQUENCES_FILE, BARCODED_NUC_FILE, OLIGO_AA_LENGTH, NUM_MAPPING_THREADS, PREFIX, SUFFIX, \
+    EDGE_RESTRICTION_FILE
 from BuildPhIPSeqLibrary.read_pipeline_files import read_barcoded_nucleotide_files, read_unconverted_sequences
 
 
+def compute_edge_restrictions():
+    prefix_restrictions = []
+    suffix_restrictions = []
+    for restricted in RESTRICTED_SEQUENCES:
+        for i in range(1, len(restricted)):
+            if PREFIX.endswith(restricted[:i]):
+                prefix_restrictions.append(restricted[i:])
+            if SUFFIX.startswith(restricted[i:]):
+                suffix_restrictions.append(restricted[:i])
+    return prefix_restrictions, suffix_restrictions
+
+
+def get_edge_restrictions(write_file=True):
+    if write_file and not os.path.exists(EDGE_RESTRICTION_FILE):
+        prefix_restrictions, suffix_restrictions = compute_edge_restrictions()
+        edge_frame = pd.Series({'prefix': prefix_restrictions, 'suffix': suffix_restrictions})
+        edge_frame.to_csv(EDGE_RESTRICTION_FILE)
+    global edge_restrictions
+    edge_restrictions = pd.read_csv(EDGE_RESTRICTION_FILE, index_col=0)
+    edge_restrictions = edge_restrictions.applymap(eval).iloc[:, 0].to_dict()
+
+
 def has_no_restricted_sequences(nuc_seq):
+    edge_restrictions = globals().get('edge_restrictions', get_edge_restrictions(write_file=False))
     ret = all(list(map(lambda restricted: restricted not in nuc_seq, RESTRICTED_SEQUENCES)))
+    # If sequence has not restriction site check that does not have restriction sites with the prefix and suffix
+    if ret:
+        ret = all(list(map(lambda restricted: not nuc_seq.startswith(restricted), edge_restrictions['prefix'])))
+        ret = ret and all(list(map(lambda restricted: not nuc_seq.endswith(restricted), edge_restrictions['suffix'])))
     return ret
 
 
@@ -240,8 +269,13 @@ def update_unconverted_oligos_file(unconverted_oligos):
     pd.concat([current_unconverted, unconverted_oligos[['oligo_aa_sequence']]]).to_csv(UNCONVERTED_SEQUENCES_FILE)
 
 
+def initializer(edge_restriction_file):
+    global EDGE_RESTRICTION_FILE
+    EDGE_RESTRICTION_FILE = edge_restriction_file
+
+
 def aa_to_nuc(oligos_aa_sequences):
-    pool = Pool(NUM_MAPPING_THREADS)
+    pool = Pool(NUM_MAPPING_THREADS, initializer=initializer, initargs=(EDGE_RESTRICTION_FILE,))
     oligos_aa_sequences['nuc_sequence'] = pool.starmap(code_one_aa_sequence_to_nuc,
                                                        oligos_aa_sequences[['oligo_aa_sequence']].values)
     pool.close()
