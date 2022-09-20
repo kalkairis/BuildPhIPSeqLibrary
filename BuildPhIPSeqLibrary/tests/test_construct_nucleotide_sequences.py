@@ -85,6 +85,8 @@ class Test(TestCase):
             new_aa_seq = ''.join([aa_to_nuc[nuc_seq[i: i + 3]] for i in range(0, len(nuc_seq), 3)])
             self.assertEqual(aa_seq, new_aa_seq)
 
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions.csv'))
     def test_create_new_nuc_sequence(self):
         with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_IN_5_PRIME_END', True):
             oligo_rows = pd.DataFrame(index=['oligo_1'], data={
@@ -233,6 +235,8 @@ class Test(TestCase):
                     self.assertIsNotNone(ret)
                     self.assertEqual(len(ret), len(nuc_seq))
 
+    @mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.EDGE_RESTRICTION_FILE',
+                os.path.join(MOCK_DATA_DIR, 'PipelineFiles', 'edge_restrictions.csv'))
     def test_iterative_correction_of_single_barcode(self):
         for barcode_nuc_lengths in [[3, 6, 3], [4, 5, 3]]:
             with mock.patch('BuildPhIPSeqLibrary.construct_nucleotide_sequences.BARCODE_NUC_LENGTHS',
