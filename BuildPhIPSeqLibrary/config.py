@@ -4,7 +4,7 @@ import pandas as pd
 
 if os.path.exists(__file__.replace('.py', '_local.py')):
     # noinspection PyUnresolvedReferences
-    from config_local import *
+    from BuildPhIPSeqLibrary.config_local import *
 
 NUM_MAPPING_THREADS = globals().get('NUM_MAPPING_THREADS', 30)
 
