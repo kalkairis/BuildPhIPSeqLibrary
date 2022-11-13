@@ -53,6 +53,7 @@ def subfigure_b(ax):
 
 if __name__ == "__main__":
     fig = plt.figure(figsize=(37, 21))
+    fig.set_dpi(1000)
     spec = fig.add_gridspec(1, 2, width_ratios=[27, 11], wspace=0.2)
 
     # sub figure a
